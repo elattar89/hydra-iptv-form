@@ -491,16 +491,55 @@
     else { nat.classList.remove('invalid'); natErr.classList.remove('show'); }
 
     if (valid) {
-      sendToGSheet({
+      var newBtn = document.querySelector('#screen-new .submit-btn');
+      newBtn.disabled = true;
+      newBtn.textContent = 'جاري الإرسال...';
+      var newData = {
         kind: 'اشتراك جديد',
         username: document.getElementById('new-username').value,
         name: document.getElementById('new-fullname').value,
         sex: document.querySelector('input[name="new-gender"]:checked').value === 'male' ? 'ذكر' : 'أنثى',
         phone: document.getElementById('new-phone').value,
         nationality: document.getElementById('new-nationality').value
-      });
-      document.getElementById('new-form-container').style.display = 'none';
-      document.getElementById('new-success').style.display = 'block';
+      };
+      sendToGSheet(newData);
+      if (window.saveRegistration) {
+        window.saveRegistration(newData).then(function(res) {
+          newBtn.disabled = false;
+          newBtn.textContent = 'إرسال التسجيل';
+          if (res.success) {
+            document.getElementById('new-form-container').style.display = 'none';
+            document.getElementById('new-success').style.display = 'block';
+          } else if (res.reason === 'duplicate_username') {
+            var dupBanner = document.getElementById('dup-banner-new');
+            if (!dupBanner) {
+              dupBanner = document.createElement('div');
+              dupBanner.id = 'dup-banner-new';
+              dupBanner.style.cssText = 'background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:#991b1b;font-size:0.9rem;font-weight:600;text-align:center;line-height:1.6;font-family:Cairo,sans-serif;';
+              newBtn.parentNode.insertBefore(dupBanner, newBtn);
+            }
+            dupBanner.textContent = '⚠️ اسم المستخدم مسجل من قبل، اختر اسماً آخر.';
+            dupBanner.scrollIntoView({behavior:'smooth',block:'center'});
+          } else if (res.reason === 'duplicate_phone') {
+            var dupBanner2 = document.getElementById('dup-banner-new');
+            if (!dupBanner2) {
+              dupBanner2 = document.createElement('div');
+              dupBanner2.id = 'dup-banner-new';
+              dupBanner2.style.cssText = 'background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:#991b1b;font-size:0.9rem;font-weight:600;text-align:center;line-height:1.6;font-family:Cairo,sans-serif;';
+              newBtn.parentNode.insertBefore(dupBanner2, newBtn);
+            }
+            dupBanner2.textContent = '⚠️ رقم الهاتف مسجل من قبل.';
+            dupBanner2.scrollIntoView({behavior:'smooth',block:'center'});
+          } else {
+            alert('حدث خطأ في الإرسال، حاول مرة أخرى.');
+          }
+        });
+      } else {
+        newBtn.disabled = false;
+        newBtn.textContent = 'إرسال التسجيل';
+        document.getElementById('new-form-container').style.display = 'none';
+        document.getElementById('new-success').style.display = 'block';
+      }
     } else {
       var first = document.querySelector('#screen-new .invalid, #screen-new .err.show');
       if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -527,16 +566,31 @@
     else { phone.classList.remove('invalid'); phoneErr.classList.remove('show'); }
 
     if (valid) {
-      sendToGSheet({
+      var renewBtn = document.querySelector('#screen-renew .submit-btn');
+      renewBtn.disabled = true;
+      renewBtn.textContent = 'جاري الإرسال...';
+      var renewData = {
         kind: 'تجديد اشتراك',
         username: document.getElementById('renew-username').value,
         name: document.getElementById('renew-fullname').value,
         sex: '',
         phone: document.getElementById('renew-phone').value,
         nationality: ''
-      });
-      document.getElementById('renew-form-container').style.display = 'none';
-      document.getElementById('renew-success').style.display = 'block';
+      };
+      sendToGSheet(renewData);
+      if (window.saveRegistration) {
+        window.saveRegistration(renewData).then(function(res) {
+          renewBtn.disabled = false;
+          renewBtn.textContent = 'إرسال طلب التجديد';
+          document.getElementById('renew-form-container').style.display = 'none';
+          document.getElementById('renew-success').style.display = 'block';
+        });
+      } else {
+        renewBtn.disabled = false;
+        renewBtn.textContent = 'إرسال طلب التجديد';
+        document.getElementById('renew-form-container').style.display = 'none';
+        document.getElementById('renew-success').style.display = 'block';
+      }
     } else {
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
       if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -565,5 +619,51 @@
     });
   });
 </script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxpwm4K9KTVFHV22PD_yxKhvSn5ThJ4sA",
+    authDomain: "iptv-database-8e795.firebaseapp.com",
+    projectId: "iptv-database-8e795",
+    storageBucket: "iptv-database-8e795.firebasestorage.app",
+    messagingSenderId: "865423484494",
+    appId: "1:865423484494:web:434c3357606e7b1e69051f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const REG_COLLECTION = "registration_requests";
+
+  window.saveRegistration = async function(data) {
+    try {
+      // فحص تكرار اليوزرنيم
+      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return { success: false, reason: "duplicate_username" };
+      }
+      // فحص تكرار الهاتف
+      const q2 = query(collection(db, REG_COLLECTION), where("phone", "==", data.phone));
+      const snap2 = await getDocs(q2);
+      if (!snap2.empty) {
+        return { success: false, reason: "duplicate_phone" };
+      }
+      // حفظ
+      await addDoc(collection(db, REG_COLLECTION), {
+        ...data,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      return { success: true };
+    } catch(e) {
+      console.error("Firebase error:", e);
+      return { success: false, reason: "error" };
+    }
+  };
+</script>
+
 </body>
 </html>
