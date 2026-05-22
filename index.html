@@ -452,8 +452,22 @@
 
   function goTo(screenId) {
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-    document.getElementById(screenId).classList.add('active');
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    var target = document.getElementById(screenId);
+    target.classList.add('active');
+
+    // اسكرول لأول input أو card في الشاشة الجديدة
+    var firstInput = target.querySelector('input, select');
+    var card = target.querySelector('.card');
+    var scrollTarget = firstInput || card;
+
+    if (scrollTarget) {
+      setTimeout(function() {
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (firstInput) firstInput.focus();
+      }, 50);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   // ===== NEW SUBSCRIPTION =====
@@ -502,12 +516,12 @@
         phone: document.getElementById('new-phone').value,
         nationality: document.getElementById('new-nationality').value
       };
-      sendToGSheet(newData);
       if (window.saveRegistration) {
         window.saveRegistration(newData).then(function(res) {
           newBtn.disabled = false;
           newBtn.textContent = 'إرسال التسجيل';
           if (res.success) {
+            sendToGSheet(newData);
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
           } else if (res.reason === 'duplicate_username') {
@@ -527,6 +541,7 @@
       } else {
         newBtn.disabled = false;
         newBtn.textContent = 'إرسال التسجيل';
+        sendToGSheet(newData);
         document.getElementById('new-form-container').style.display = 'none';
         document.getElementById('new-success').style.display = 'block';
       }
