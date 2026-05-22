@@ -269,6 +269,32 @@
   /* ===== SCREENS ===== */
   .screen { display: none; }
   .screen.active { display: block; }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.6rem; }
+
+    .header { padding: 1.8rem 1.2rem 1.5rem; border-radius: 14px; }
+    .header h1 { font-size: 1.4rem; }
+    .header-logo { width: 80px; height: 80px; }
+    .header .campaign { font-size: 0.82rem; }
+
+    .card { border-radius: 14px; }
+    .card-header { padding: 1.1rem 1.2rem; }
+    .card-header h2 { font-size: 1rem; }
+    .card-body { padding: 1.2rem 1rem; }
+
+    .welcome-btn { padding: 0.9rem 1rem; font-size: 0.95rem; }
+    .btn-text .btn-title { font-size: 0.92rem; }
+
+    .gender-group { flex-direction: column; gap: 0.6rem; }
+
+    .submit-btn { font-size: 0.95rem; padding: 0.85rem; }
+
+    .back-link { font-size: 0.82rem; padding: 0.45rem 0.9rem; }
+
+    .success-card { padding: 2rem 1.2rem; }
+  }
 </style>
 </head>
 <body>
@@ -462,7 +488,9 @@
 
     if (scrollTarget) {
       setTimeout(function() {
-        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var rect = scrollTarget.getBoundingClientRect();
+        var offset = window.pageYOffset + rect.top - 80;
+        window.scrollTo({ top: offset, behavior: 'smooth' });
         if (firstInput) firstInput.focus();
       }, 50);
     } else {
