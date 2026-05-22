@@ -672,13 +672,29 @@
 
   window.saveRegistration = async function(data) {
     try {
-      // فحص تكرار اليوزرنيم فقط
-      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username), where("status", "==", "pending"));
+      const usernameToCheck = data.username.trim().toLowerCase();
+
+      // 1) فحص Firebase — بغض النظر عن الـ status
+      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username));
       const snap = await getDocs(q);
       if (!snap.empty) {
         return { success: false, reason: "duplicate_username" };
       }
-      // حفظ
+
+      // 2) فحص Google Sheets
+      try {
+        const res = await fetch(GSHEET_URL, { method: 'GET' });
+        const json = await res.json();
+        const sheetUsernames = (json.usernames || []).map(u => String(u).trim().toLowerCase());
+        if (sheetUsernames.includes(usernameToCheck)) {
+          return { success: false, reason: "duplicate_username" };
+        }
+      } catch(sheetErr) {
+        console.warn("تعذر الفحص من Google Sheets:", sheetErr);
+        // لو فشل الفحص من Sheets نكمل — Firebase كافي
+      }
+
+      // حفظ في Firebase
       await addDoc(collection(db, REG_COLLECTION), {
         ...data,
         status: "pending",
