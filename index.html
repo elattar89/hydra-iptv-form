@@ -610,6 +610,7 @@
         phone: document.getElementById('renew-phone').value,
         nationality: ''
       };
+      // بيبعت على Sheets وFirebase مع بعض
       sendToGSheet(renewData);
       if (window.saveRegistration) {
         window.saveRegistration(renewData).then(function(res) {
@@ -670,37 +671,68 @@
   const db = getFirestore(app);
   const REG_COLLECTION = "registration_requests";
 
+  // ===== فحص الشيت وتحديد نوع العميل =====
+  async function checkSheetData(username, name, phone) {
+    try {
+      const res = await fetch(GSHEET_URL, { method: 'GET' });
+      const json = await res.json();
+      const sheetUsernames = (json.usernames || []).map(u => String(u).trim().toLowerCase());
+      const sheetPhones    = (json.phones    || []).map(p => String(p).trim().replace(/\s/g,''));
+
+      const uMatch = sheetUsernames.includes(username.trim().toLowerCase());
+      const pMatch = phone ? sheetPhones.includes(phone.trim().replace(/\s/g,'')) : false;
+
+      return { uMatch, pMatch };
+    } catch(e) {
+      console.warn("تعذر الفحص من Google Sheets:", e);
+      return { uMatch: false, pMatch: false };
+    }
+  }
+
+  // ===== حفظ الطلب =====
   window.saveRegistration = async function(data) {
     try {
-      const usernameToCheck = data.username.trim().toLowerCase();
+      const username = data.username.trim();
+      const phone    = (data.phone || '').trim();
+      const name     = (data.name  || '').trim();
+      const isRenew  = data.kind === 'تجديد اشتراك';
 
-      // 1) فحص Firebase — بغض النظر عن الـ status
-      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
+      // --- تجديد اشتراك: بس يحفظ بدون فحص تكرار ---
+      if (isRenew) {
+        await addDoc(collection(db, REG_COLLECTION), {
+          ...data,
+          clientType: 'renew',
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+        return { success: true };
+      }
+
+      // --- اشتراك جديد: فحص Firebase أولاً ---
+      const fbQuery = query(collection(db, REG_COLLECTION), where("username", "==", username));
+      const fbSnap  = await getDocs(fbQuery);
+      if (!fbSnap.empty) {
         return { success: false, reason: "duplicate_username" };
       }
 
-      // 2) فحص Google Sheets
-      try {
-        const res = await fetch(GSHEET_URL, { method: 'GET' });
-        const json = await res.json();
-        const sheetUsernames = (json.usernames || []).map(u => String(u).trim().toLowerCase());
-        if (sheetUsernames.includes(usernameToCheck)) {
-          return { success: false, reason: "duplicate_username" };
-        }
-      } catch(sheetErr) {
-        console.warn("تعذر الفحص من Google Sheets:", sheetErr);
-        // لو فشل الفحص من Sheets نكمل — Firebase كافي
+      // --- فحص Google Sheets ---
+      const { uMatch, pMatch } = await checkSheetData(username, name, phone);
+      if (uMatch) {
+        return { success: false, reason: "duplicate_username" };
       }
+
+      // تحديد نوع العميل
+      const clientType = pMatch ? 'returning' : 'new';
 
       // حفظ في Firebase
       await addDoc(collection(db, REG_COLLECTION), {
         ...data,
-        status: "pending",
+        clientType,
+        status: 'pending',
         createdAt: serverTimestamp()
       });
-      return { success: true };
+      return { success: true, clientType };
+
     } catch(e) {
       console.error("Firebase error:", e);
       return { success: false, reason: "error" };
