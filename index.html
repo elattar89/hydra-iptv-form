@@ -270,6 +270,58 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
+  /* ===== DURATION SELECTOR ===== */
+  .duration-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+  }
+  .duration-option {
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 0.6rem 0.4rem;
+    cursor: pointer;
+    text-align: center;
+    background: var(--gray-50);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .duration-option input { display: none; }
+  .duration-option:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .duration-option .dur-months {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    display: block;
+    line-height: 1.2;
+  }
+  .duration-option:has(input:checked) .dur-months { color: var(--accent); }
+  .duration-option .dur-price {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    display: block;
+    margin-top: 2px;
+  }
+  .duration-option:has(input:checked) .dur-price { color: var(--accent); font-weight: 600; }
+
+  .price-preview {
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    border-radius: 12px;
+    padding: 0.9rem 1.2rem;
+    margin-top: 0.8rem;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+  }
+  .price-preview.show { display: flex; }
+  .price-preview .pp-label { font-size: 0.82rem; opacity: 0.8; }
+  .price-preview .pp-amount { font-size: 1.3rem; font-weight: 700; color: var(--accent-light); }
+
   /* ===== MOBILE ===== */
   @media (max-width: 480px) {
     body { padding: 1rem 0.6rem; }
@@ -405,6 +457,42 @@
             <div class="err" id="err-new-nationality">هذا الحقل مطلوب</div>
           </div>
 
+          <div class="field">
+            <label>مدة الاشتراك <span class="req">*</span></label>
+            <div class="duration-grid" id="new-duration-grid">
+              <label class="duration-option">
+                <input type="radio" name="new-duration" value="6" data-price="6" />
+                <span class="dur-months">6 شهور</span>
+                <span class="dur-price">6 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="new-duration" value="12" data-price="10" />
+                <span class="dur-months">12 شهر</span>
+                <span class="dur-price">10 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="new-duration" value="15" data-price="12" />
+                <span class="dur-months">15 شهر</span>
+                <span class="dur-price">12 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="new-duration" value="24" data-price="18" />
+                <span class="dur-months">24 شهر</span>
+                <span class="dur-price">18 دينار</span>
+              </label>
+              <label class="duration-option" style="grid-column: span 2;">
+                <input type="radio" name="new-duration" value="30" data-price="24" />
+                <span class="dur-months">30 شهر</span>
+                <span class="dur-price">24 دينار</span>
+              </label>
+            </div>
+            <div class="err" id="err-new-duration">يجب اختيار مدة الاشتراك</div>
+            <div class="price-preview" id="new-price-preview">
+              <span class="pp-label">المبلغ المطلوب</span>
+              <span class="pp-amount" id="new-price-amount">—</span>
+            </div>
+          </div>
+
           <button class="submit-btn" onclick="submitNew()">إرسال التسجيل</button>
         </div>
 
@@ -448,6 +536,42 @@
             <div class="err" id="err-renew-phone">هذا الحقل مطلوب</div>
           </div>
 
+          <div class="field">
+            <label>مدة الاشتراك <span class="req">*</span></label>
+            <div class="duration-grid" id="renew-duration-grid">
+              <label class="duration-option">
+                <input type="radio" name="renew-duration" value="6" data-price="6" />
+                <span class="dur-months">6 شهور</span>
+                <span class="dur-price">6 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="renew-duration" value="12" data-price="10" />
+                <span class="dur-months">12 شهر</span>
+                <span class="dur-price">10 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="renew-duration" value="15" data-price="12" />
+                <span class="dur-months">15 شهر</span>
+                <span class="dur-price">12 دينار</span>
+              </label>
+              <label class="duration-option">
+                <input type="radio" name="renew-duration" value="24" data-price="18" />
+                <span class="dur-months">24 شهر</span>
+                <span class="dur-price">18 دينار</span>
+              </label>
+              <label class="duration-option" style="grid-column: span 2;">
+                <input type="radio" name="renew-duration" value="30" data-price="24" />
+                <span class="dur-months">30 شهر</span>
+                <span class="dur-price">24 دينار</span>
+              </label>
+            </div>
+            <div class="err" id="err-renew-duration">يجب اختيار مدة الاشتراك</div>
+            <div class="price-preview" id="renew-price-preview">
+              <span class="pp-label">المبلغ المطلوب</span>
+              <span class="pp-amount" id="renew-price-amount">—</span>
+            </div>
+          </div>
+
           <button class="submit-btn" onclick="submitRenew()">إرسال طلب التجديد</button>
         </div>
 
@@ -472,7 +596,17 @@
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        kind:        data.kind        || '',
+        username:    data.username    || '',
+        name:        data.name        || '',
+        sex:         data.sex         || '',
+        phone:       data.phone       || '',
+        nationality: data.nationality || '',
+        duration:    data.duration    || '',
+        price:       data.price       || '',
+        clientType:  data.clientType  || ''
+      })
     }).catch(function(){});
   }
 
@@ -532,17 +666,25 @@
     if (!nat.value) { nat.classList.add('invalid'); natErr.classList.add('show'); valid = false; }
     else { nat.classList.remove('invalid'); natErr.classList.remove('show'); }
 
+    var durNew = document.querySelector('input[name="new-duration"]:checked');
+    var durNewErr = document.getElementById('err-new-duration');
+    if (!durNew) { durNewErr.classList.add('show'); valid = false; }
+    else { durNewErr.classList.remove('show'); }
+
     if (valid) {
       var newBtn = document.querySelector('#screen-new .submit-btn');
       newBtn.disabled = true;
       newBtn.textContent = 'جاري الإرسال...';
+      var selectedDurNew = document.querySelector('input[name="new-duration"]:checked');
       var newData = {
         kind: 'اشتراك جديد',
         username: document.getElementById('new-username').value,
         name: document.getElementById('new-fullname').value,
         sex: document.querySelector('input[name="new-gender"]:checked').value === 'male' ? 'ذكر' : 'أنثى',
         phone: document.getElementById('new-phone').value,
-        nationality: document.getElementById('new-nationality').value
+        nationality: document.getElementById('new-nationality').value,
+        duration: selectedDurNew ? selectedDurNew.value : '15',
+        price: selectedDurNew ? (DURATION_PRICES[selectedDurNew.value] || '') : ''
       };
       if (window.saveRegistration) {
         window.saveRegistration(newData).then(function(res) {
@@ -598,17 +740,25 @@
     if (!phone.value.trim()) { phone.classList.add('invalid'); phoneErr.classList.add('show'); valid = false; }
     else { phone.classList.remove('invalid'); phoneErr.classList.remove('show'); }
 
+    var durRenew = document.querySelector('input[name="renew-duration"]:checked');
+    var durRenewErr = document.getElementById('err-renew-duration');
+    if (!durRenew) { durRenewErr.classList.add('show'); valid = false; }
+    else { durRenewErr.classList.remove('show'); }
+
     if (valid) {
       var renewBtn = document.querySelector('#screen-renew .submit-btn');
       renewBtn.disabled = true;
       renewBtn.textContent = 'جاري الإرسال...';
+      var selectedDurRenew = document.querySelector('input[name="renew-duration"]:checked');
       var renewData = {
         kind: 'تجديد اشتراك',
         username: document.getElementById('renew-username').value,
         name: document.getElementById('renew-fullname').value,
         sex: '',
         phone: document.getElementById('renew-phone').value,
-        nationality: ''
+        nationality: '',
+        duration: selectedDurRenew ? selectedDurRenew.value : '15',
+        price: selectedDurRenew ? (DURATION_PRICES[selectedDurRenew.value] || '') : ''
       };
       // بيبعت على Sheets وFirebase مع بعض
       sendToGSheet(renewData);
@@ -632,6 +782,20 @@
   }
 
   // Live clear on inputs
+  // أسعار المدد
+  var DURATION_PRICES = { '6':6, '12':10, '15':12, '24':18, '30':24 };
+
+  function setupDurationListeners(groupName, previewId, amountId, errId) {
+    document.querySelectorAll('input[name="' + groupName + '"]').forEach(function(r) {
+      r.addEventListener('change', function() {
+        var price = DURATION_PRICES[this.value] || 0;
+        document.getElementById(amountId).textContent = price + ' دينار';
+        document.getElementById(previewId).classList.add('show');
+        document.getElementById(errId).classList.remove('show');
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     ['new-username','new-fullname','new-phone','renew-fullname','renew-username','renew-phone'].forEach(function(id) {
       var el = document.getElementById(id);
@@ -651,6 +815,10 @@
         document.getElementById('err-new-gender').classList.remove('show');
       });
     });
+
+    // duration listeners
+    setupDurationListeners('new-duration',   'new-price-preview',   'new-price-amount',   'err-new-duration');
+    setupDurationListeners('renew-duration', 'renew-price-preview', 'renew-price-amount', 'err-renew-duration');
   });
 </script>
 
