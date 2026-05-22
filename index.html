@@ -332,13 +332,13 @@
 
           <div class="field">
             <label>اسم المستخدم المراد استخدامه <span class="req">*</span></label>
-            <input id="new-username" type="text" placeholder="" style="direction:ltr;text-align:right;" />
+            <input id="new-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" />
             <div class="err" id="err-new-username">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
             <label>الاسم الكامل <span class="req">*</span></label>
-            <input id="new-fullname" type="text" placeholder="" />
+            <input id="new-fullname" autocomplete="new-password" type="text" placeholder="" />
             <div class="err" id="err-new-fullname">هذا الحقل مطلوب</div>
           </div>
 
@@ -359,13 +359,13 @@
 
           <div class="field">
             <label>رقم الهاتف (واتساب) <span class="req">*</span></label>
-            <input id="new-phone" type="tel" placeholder="" />
+            <input id="new-phone" autocomplete="new-password" type="tel" placeholder="" />
             <div class="err" id="err-new-phone">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
             <label>الجنسية <span class="req">*</span></label>
-            <select id="new-nationality">
+            <select id="new-nationality" autocomplete="new-password">
               <option value="" disabled selected>— اختر —</option>
               <option>الكويت</option><option>السعودية</option><option>الإمارات</option>
               <option>قطر</option><option>سلطنة عمان</option><option>البحرين</option>
@@ -406,19 +406,19 @@
 
           <div class="field">
             <label>الاسم الكامل <span class="req">*</span></label>
-            <input id="renew-fullname" type="text" placeholder="" />
+            <input id="renew-fullname" autocomplete="new-password" type="text" placeholder="" />
             <div class="err" id="err-renew-fullname">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
             <label>اسم المستخدم المراد تجديده <span class="req">*</span></label>
-            <input id="renew-username" type="text" placeholder="" style="direction:ltr;text-align:right;" />
+            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" />
             <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
             <label>رقم الهاتف (واتساب) <span class="req">*</span></label>
-            <input id="renew-phone" type="tel" placeholder="" />
+            <input id="renew-phone" autocomplete="new-password" type="tel" placeholder="" />
             <div class="err" id="err-renew-phone">هذا الحقل مطلوب</div>
           </div>
 
@@ -520,16 +520,6 @@
             }
             dupBanner.textContent = '⚠️ اسم المستخدم مسجل من قبل، اختر اسماً آخر.';
             dupBanner.scrollIntoView({behavior:'smooth',block:'center'});
-          } else if (res.reason === 'duplicate_phone') {
-            var dupBanner2 = document.getElementById('dup-banner-new');
-            if (!dupBanner2) {
-              dupBanner2 = document.createElement('div');
-              dupBanner2.id = 'dup-banner-new';
-              dupBanner2.style.cssText = 'background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:#991b1b;font-size:0.9rem;font-weight:600;text-align:center;line-height:1.6;font-family:Cairo,sans-serif;';
-              newBtn.parentNode.insertBefore(dupBanner2, newBtn);
-            }
-            dupBanner2.textContent = '⚠️ رقم الهاتف مسجل من قبل.';
-            dupBanner2.scrollIntoView({behavior:'smooth',block:'center'});
           } else {
             alert('حدث خطأ في الإرسال، حاول مرة أخرى.');
           }
@@ -639,17 +629,11 @@
 
   window.saveRegistration = async function(data) {
     try {
-      // فحص تكرار اليوزرنيم
-      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username));
+      // فحص تكرار اليوزرنيم فقط
+      const q = query(collection(db, REG_COLLECTION), where("username", "==", data.username), where("status", "==", "pending"));
       const snap = await getDocs(q);
       if (!snap.empty) {
         return { success: false, reason: "duplicate_username" };
-      }
-      // فحص تكرار الهاتف
-      const q2 = query(collection(db, REG_COLLECTION), where("phone", "==", data.phone));
-      const snap2 = await getDocs(q2);
-      if (!snap2.empty) {
-        return { success: false, reason: "duplicate_phone" };
       }
       // حفظ
       await addDoc(collection(db, REG_COLLECTION), {
