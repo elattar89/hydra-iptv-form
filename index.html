@@ -726,18 +726,23 @@
             sendToGSheet(newData);
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
-            // reset الفورم بعد 3 ثواني عشان لو رجع يسجل تاني يلاقيه نضيف
+            document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
+            // reset الفورم
             setTimeout(function() {
-              document.getElementById('new-username').value = '';
-              document.getElementById('new-fullname').value = '';
-              document.getElementById('new-phone').value = '';
-              document.getElementById('new-nationality').value = '';
+              document.getElementById('new-form-container').style.display = 'block';
+              document.getElementById('new-success').style.display = 'none';
+              ['new-username','new-fullname','new-phone'].forEach(function(id){
+                var el = document.getElementById(id); if(el) el.value = '';
+              });
+              var natEl = document.getElementById('new-nationality');
+              if (natEl) natEl.value = '';
               document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
               document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
-              document.getElementById('new-price-preview').classList.remove('show');
+              var priceEl = document.getElementById('new-price-preview');
+              if (priceEl) priceEl.classList.remove('show');
               var dupBanner = document.getElementById('dup-banner-new');
               if (dupBanner) dupBanner.remove();
-            }, 3000);
+            }, 4000);
           } else if (res.reason === 'duplicate_username') {
             var dupBanner = document.getElementById('dup-banner-new');
             if (!dupBanner) {
@@ -758,6 +763,20 @@
         sendToGSheet(newData);
         document.getElementById('new-form-container').style.display = 'none';
         document.getElementById('new-success').style.display = 'block';
+        document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
+        setTimeout(function() {
+          document.getElementById('new-form-container').style.display = 'block';
+          document.getElementById('new-success').style.display = 'none';
+          ['new-username','new-fullname','new-phone'].forEach(function(id){
+            var el = document.getElementById(id); if(el) el.value = '';
+          });
+          var natEl = document.getElementById('new-nationality');
+          if (natEl) natEl.value = '';
+          document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
+          document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
+          var priceEl = document.getElementById('new-price-preview');
+          if (priceEl) priceEl.classList.remove('show');
+        }, 4000);
       }
     } else {
       var first = document.querySelector('#screen-new .invalid, #screen-new .err.show');
@@ -812,6 +831,7 @@
           renewBtn.textContent = 'إرسال طلب التجديد';
           document.getElementById('renew-form-container').style.display = 'none';
           document.getElementById('renew-success').style.display = 'block';
+          document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
           setTimeout(function() {
             document.getElementById('renew-form-container').style.display = 'block';
             document.getElementById('renew-success').style.display = 'none';
@@ -828,6 +848,7 @@
         renewBtn.textContent = 'إرسال طلب التجديد';
         document.getElementById('renew-form-container').style.display = 'none';
         document.getElementById('renew-success').style.display = 'block';
+        document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
         setTimeout(function() {
           document.getElementById('renew-form-container').style.display = 'block';
           document.getElementById('renew-success').style.display = 'none';
