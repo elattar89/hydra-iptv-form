@@ -665,7 +665,10 @@
   }
 
   // ===== NEW SUBSCRIPTION =====
+  var _submittingNew = false;
   function submitNew() {
+    if (_submittingNew) return;
+    _submittingNew = true;
     var valid = true;
 
     var username = document.getElementById('new-username');
@@ -727,7 +730,7 @@
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
             document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
-            // reset الفورم
+            _submittingNew = false;
             setTimeout(function() { goTo('screen-welcome'); }, 3000);
           } else if (res.reason === 'duplicate_username') {
             var dupBanner = document.getElementById('dup-banner-new');
@@ -739,18 +742,17 @@
             }
             dupBanner.textContent = '⚠️ اسم المستخدم مسجل من قبل، اختر اسماً آخر.';
             dupBanner.scrollIntoView({behavior:'smooth',block:'center'});
+            _submittingNew = false;
           } else {
+            _submittingNew = false;
             alert('حدث خطأ في الإرسال، حاول مرة أخرى.');
           }
         });
       } else {
         newBtn.disabled = false;
         newBtn.textContent = 'إرسال التسجيل';
-        sendToGSheet(newData);
-        document.getElementById('new-form-container').style.display = 'none';
-        document.getElementById('new-success').style.display = 'block';
-        document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
-        setTimeout(function() { goTo('screen-welcome'); }, 3000);
+        _submittingNew = false;
+        alert('جاري تحميل النظام، حاول مرة أخرى بعد ثانية.');
       }
     } else {
       var first = document.querySelector('#screen-new .invalid, #screen-new .err.show');
@@ -883,7 +885,10 @@
   // ===== فحص الشيت وتحديد نوع العميل =====
   async function checkSheetData(username, name, phone) {
     try {
-      const res = await fetch(GSHEET_URL, { method: 'GET' });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000); // 5 ثواني max
+      const res = await fetch(GSHEET_URL, { method: 'GET', signal: controller.signal });
+      clearTimeout(timeout);
       const json = await res.json();
       const sheetUsernames = (json.usernames || []).map(u => String(u).trim().toLowerCase());
       const sheetPhones    = (json.phones    || []).map(p => String(p).trim().replace(/\s/g,''));
@@ -917,10 +922,14 @@
         return { success: true };
       }
 
-      // --- اشتراك جديد: فحص registration_requests ---
-      // ممنوع لو موجود بـ pending أو approved، مسموح لو rejected أو مش موجود
-      const fbQuery = query(collection(db, REG_COLLECTION), where("username", "==", username));
-      const fbSnap  = await getDocs(fbQuery);
+      // --- فحص الثلاثة بالتوازي ---
+      const [fbSnap, iptvSnap, sheetData] = await Promise.all([
+        getDocs(query(collection(db, REG_COLLECTION), where("username", "==", username))),
+        getDocs(collection(db, "iptv")).catch(() => ({ docs: [] })),
+        checkSheetData(username, name, phone).catch(() => ({ uMatch: false, pMatch: false }))
+      ]);
+
+      // فحص registration_requests
       if (!fbSnap.empty) {
         const blockedDoc = fbSnap.docs.find(d => {
           const st = d.data().status;
@@ -929,24 +938,18 @@
         if (blockedDoc) return { success: false, reason: "duplicate_username" };
       }
 
-      // --- فحص accounts في iptv collection ---
-      try {
-        const iptvSnap = await getDocs(collection(db, "iptv"));
-        for (const docSnap of iptvSnap.docs) {
-          const docData = docSnap.data();
-          const accs = JSON.parse(docData.accounts || "[]");
+      // فحص iptv/accounts
+      for (const docSnap of iptvSnap.docs) {
+        try {
+          const accs = JSON.parse(docSnap.data().accounts || "[]");
           const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
           if (found) return { success: false, reason: "duplicate_username" };
-        }
-      } catch(e) {
-        console.warn("تعذر فحص accounts:", e);
+        } catch(e) {}
       }
 
-      // --- فحص Google Sheets ---
-      const { uMatch, pMatch } = await checkSheetData(username, name, phone);
-      if (uMatch) {
-        return { success: false, reason: "duplicate_username" };
-      }
+      // فحص Google Sheets
+      const { uMatch, pMatch } = sheetData;
+      if (uMatch) return { success: false, reason: "duplicate_username" };
 
       // تحديد نوع العميل
       const clientType = pMatch ? 'returning' : 'new';
