@@ -876,11 +876,24 @@
         return { success: true };
       }
 
-      // --- اشتراك جديد: فحص Firebase أولاً ---
+      // --- اشتراك جديد: فحص registration_requests ---
       const fbQuery = query(collection(db, REG_COLLECTION), where("username", "==", username));
       const fbSnap  = await getDocs(fbQuery);
       if (!fbSnap.empty) {
         return { success: false, reason: "duplicate_username" };
+      }
+
+      // --- فحص accounts في iptv collection ---
+      try {
+        const iptvSnap = await getDocs(collection(db, "iptv"));
+        for (const docSnap of iptvSnap.docs) {
+          const data = docSnap.data();
+          const accounts = JSON.parse(data.accounts || "[]");
+          const found = accounts.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
+          if (found) return { success: false, reason: "duplicate_username" };
+        }
+      } catch(e) {
+        console.warn("تعذر فحص accounts:", e);
       }
 
       // --- فحص Google Sheets ---
