@@ -799,24 +799,46 @@
         duration: selectedDurRenew ? selectedDurRenew.value : '15',
         price: selectedDurRenew ? (DURATION_PRICES[selectedDurRenew.value] || '') : ''
       };
-      // بيبعت على Sheets وFirebase مع بعض
-      sendToGSheet(renewData);
       if (window.saveRegistration) {
         window.saveRegistration(renewData).then(function(res) {
           renewBtn.disabled = false;
           renewBtn.textContent = 'إرسال طلب التجديد';
-          document.getElementById('renew-form-container').style.display = 'none';
-          document.getElementById('renew-success').style.display = 'block';
-          document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
-          setTimeout(function() { goTo('screen-welcome'); }, 3000);
+
+          if (res.success) {
+            // بعت على Sheets بس بعد ما Firebase قبل
+            sendToGSheet(renewData);
+            document.getElementById('renew-form-container').style.display = 'none';
+            document.getElementById('renew-success').style.display = 'block';
+            document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
+            setTimeout(function() { goTo('screen-welcome'); }, 3000);
+          } else if (res.reason === 'duplicate_renew') {
+            var dupB = document.getElementById('dup-banner-renew');
+            if (!dupB) {
+              dupB = document.createElement('div');
+              dupB.id = 'dup-banner-renew';
+              dupB.style.cssText = 'background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:#991b1b;font-size:0.9rem;font-weight:600;text-align:center;line-height:1.6;font-family:Cairo,sans-serif;';
+              renewBtn.parentNode.insertBefore(dupB, renewBtn);
+            }
+            dupB.textContent = '⚠️ لديك طلب تجديد قيد المراجعة بالفعل، انتظر الموافقة عليه.';
+            dupB.scrollIntoView({behavior:'smooth', block:'center'});
+          } else if (res.reason === 'not_found') {
+            var notB = document.getElementById('dup-banner-renew');
+            if (!notB) {
+              notB = document.createElement('div');
+              notB.id = 'dup-banner-renew';
+              notB.style.cssText = 'background:#fef2f2;border:1.5px solid #dc2626;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;color:#991b1b;font-size:0.9rem;font-weight:600;text-align:center;line-height:1.6;font-family:Cairo,sans-serif;';
+              renewBtn.parentNode.insertBefore(notB, renewBtn);
+            }
+            notB.textContent = '⚠️ اسم المستخدم غير مسجل لدينا، تحقق من الاسم أو تواصل معنا.';
+            notB.scrollIntoView({behavior:'smooth', block:'center'});
+          } else {
+            alert('حدث خطأ، حاول مرة أخرى.');
+          }
         });
       } else {
         renewBtn.disabled = false;
         renewBtn.textContent = 'إرسال طلب التجديد';
-        document.getElementById('renew-form-container').style.display = 'none';
-        document.getElementById('renew-success').style.display = 'block';
-        document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
-        setTimeout(function() { goTo('screen-welcome'); }, 3000);
+        alert('جاري تحميل النظام، حاول مرة أخرى بعد ثانية.');
       }
     } else {
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
@@ -911,15 +933,45 @@
       const name     = (data.name  || '').trim();
       const isRenew  = data.kind === 'تجديد اشتراك';
 
-      // --- تجديد اشتراك: بس يحفظ بدون فحص تكرار ---
+      // --- تجديد اشتراك ---
       if (isRenew) {
+
+        // 1) فحص إن مفيش طلب تجديد pending لنفس اليوزرنيم
+        const renewQuery = query(collection(db, REG_COLLECTION),
+          where("username", "==", username),
+          where("clientType", "==", "renew"),
+          where("status", "==", "pending")
+        );
+        const renewSnap = await getDocs(renewQuery);
+        if (!renewSnap.empty) {
+          return { success: false, reason: "duplicate_renew" };
+        }
+
+        // 2) تحقق من وجود الشخص في الداشبورد
+        let existingAccount = null;
+        try {
+          const iptvSnap = await getDocs(collection(db, "iptv"));
+          for (const docSnap of iptvSnap.docs) {
+            const accs = JSON.parse(docSnap.data().accounts || "[]");
+            const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
+            if (found) { existingAccount = found; break; }
+          }
+        } catch(e) {}
+
+        if (!existingAccount) {
+          return { success: false, reason: "not_found" };
+        }
+
+        // حفظ طلب التجديد
         await addDoc(collection(db, REG_COLLECTION), {
           ...data,
+          name: existingAccount.name,
+          phone: existingAccount.phone,
           clientType: 'renew',
           status: 'pending',
           createdAt: serverTimestamp()
         });
-        return { success: true };
+        return { success: true, existingAccount };
       }
 
       // --- فحص الثلاثة بالتوازي ---
