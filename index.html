@@ -952,7 +952,8 @@
         try {
           const iptvSnap = await getDocs(collection(db, "iptv"));
           for (const docSnap of iptvSnap.docs) {
-            const accs = JSON.parse(docSnap.data().accounts || "[]");
+            const raw = docSnap.data().list || docSnap.data().accounts || "[]";
+            const accs = JSON.parse(raw);
             const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
             if (found) { existingAccount = found; break; }
           }
@@ -993,7 +994,8 @@
       // فحص iptv/accounts
       for (const docSnap of iptvSnap.docs) {
         try {
-          const accs = JSON.parse(docSnap.data().accounts || "[]");
+          const raw2 = docSnap.data().list || docSnap.data().accounts || "[]";
+          const accs = JSON.parse(raw2);
           const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
           if (found) return { success: false, reason: "duplicate_username" };
         } catch(e) {}
