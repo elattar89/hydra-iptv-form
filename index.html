@@ -615,6 +615,38 @@
     var target = document.getElementById(screenId);
     target.classList.add('active');
 
+    // لو رجع للـ welcome، reset كل الفورمز
+    if (screenId === 'screen-welcome') {
+      // reset اشتراك جديد
+      var newForm = document.getElementById('new-form-container');
+      var newSuccess = document.getElementById('new-success');
+      if (newForm) newForm.style.display = 'block';
+      if (newSuccess) newSuccess.style.display = 'none';
+      ['new-username','new-fullname','new-phone'].forEach(function(id){
+        var el = document.getElementById(id); if(el) el.value = '';
+      });
+      var natEl = document.getElementById('new-nationality');
+      if (natEl) natEl.value = '';
+      document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
+      document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
+      var priceEl = document.getElementById('new-price-preview');
+      if (priceEl) priceEl.classList.remove('show');
+      var dupBanner = document.getElementById('dup-banner-new');
+      if (dupBanner) dupBanner.remove();
+
+      // reset تجديد اشتراك
+      var renewForm = document.getElementById('renew-form-container');
+      var renewSuccess = document.getElementById('renew-success');
+      if (renewForm) renewForm.style.display = 'block';
+      if (renewSuccess) renewSuccess.style.display = 'none';
+      ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
+        var el = document.getElementById(id); if(el) el.value = '';
+      });
+      document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
+      var renewPrice = document.getElementById('renew-price-preview');
+      if (renewPrice) renewPrice.classList.remove('show');
+    }
+
     // اسكرول لأول input أو card في الشاشة الجديدة
     var firstInput = target.querySelector('input, select');
     var card = target.querySelector('.card');
@@ -694,6 +726,18 @@
             sendToGSheet(newData);
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
+            // reset الفورم بعد 3 ثواني عشان لو رجع يسجل تاني يلاقيه نضيف
+            setTimeout(function() {
+              document.getElementById('new-username').value = '';
+              document.getElementById('new-fullname').value = '';
+              document.getElementById('new-phone').value = '';
+              document.getElementById('new-nationality').value = '';
+              document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
+              document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
+              document.getElementById('new-price-preview').classList.remove('show');
+              var dupBanner = document.getElementById('dup-banner-new');
+              if (dupBanner) dupBanner.remove();
+            }, 3000);
           } else if (res.reason === 'duplicate_username') {
             var dupBanner = document.getElementById('dup-banner-new');
             if (!dupBanner) {
@@ -768,12 +812,32 @@
           renewBtn.textContent = 'إرسال طلب التجديد';
           document.getElementById('renew-form-container').style.display = 'none';
           document.getElementById('renew-success').style.display = 'block';
+          setTimeout(function() {
+            document.getElementById('renew-form-container').style.display = 'block';
+            document.getElementById('renew-success').style.display = 'none';
+            ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
+              var el = document.getElementById(id); if(el) el.value = '';
+            });
+            document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
+            var renewPrice = document.getElementById('renew-price-preview');
+            if (renewPrice) renewPrice.classList.remove('show');
+          }, 3000);
         });
       } else {
         renewBtn.disabled = false;
         renewBtn.textContent = 'إرسال طلب التجديد';
         document.getElementById('renew-form-container').style.display = 'none';
         document.getElementById('renew-success').style.display = 'block';
+        setTimeout(function() {
+          document.getElementById('renew-form-container').style.display = 'block';
+          document.getElementById('renew-success').style.display = 'none';
+          ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
+            var el = document.getElementById(id); if(el) el.value = '';
+          });
+          document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
+          var renewPrice = document.getElementById('renew-price-preview');
+          if (renewPrice) renewPrice.classList.remove('show');
+        }, 3000);
       }
     } else {
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
