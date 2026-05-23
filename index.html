@@ -962,19 +962,24 @@
       }
 
       // --- اشتراك جديد: فحص registration_requests ---
+      // ممنوع لو موجود بـ pending أو approved، مسموح لو rejected أو مش موجود
       const fbQuery = query(collection(db, REG_COLLECTION), where("username", "==", username));
       const fbSnap  = await getDocs(fbQuery);
       if (!fbSnap.empty) {
-        return { success: false, reason: "duplicate_username" };
+        const blockedDoc = fbSnap.docs.find(d => {
+          const st = d.data().status;
+          return st === "pending" || st === "approved";
+        });
+        if (blockedDoc) return { success: false, reason: "duplicate_username" };
       }
 
       // --- فحص accounts في iptv collection ---
       try {
         const iptvSnap = await getDocs(collection(db, "iptv"));
         for (const docSnap of iptvSnap.docs) {
-          const data = docSnap.data();
-          const accounts = JSON.parse(data.accounts || "[]");
-          const found = accounts.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
+          const docData = docSnap.data();
+          const accs = JSON.parse(docData.accounts || "[]");
+          const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
           if (found) return { success: false, reason: "duplicate_username" };
         }
       } catch(e) {
