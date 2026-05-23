@@ -459,7 +459,7 @@
 
           <div class="field">
             <label>دولة الاستخدام <span class="req">*</span></label>
-            <select id="new-country" autocomplete="new-password">
+            <select id="new-country" autocomplete="new-password" onchange="toggleCountryOther()">
               <option value="" disabled selected>— اختر —</option>
               <option>الكويت</option><option>السعودية</option><option>الإمارات</option>
               <option>قطر</option><option>سلطنة عمان</option><option>البحرين</option>
@@ -467,9 +467,14 @@
               <option>فلسطين</option><option>لبنان</option><option>الاردن</option>
               <option>مصر</option><option>المغرب</option><option>تونس</option>
               <option>ليبيا</option><option>السودان</option><option>تركيا</option>
-              <option>الهند</option><option>فلبين</option><option>باكستان</option>
-              <option>أخرى</option>
+              <option>الهند</option><option>باكستان</option><option>فلبين</option>
+              <option>بريطانيا</option><option>فرنسا</option><option>ألمانيا</option>
+              <option>إيطاليا</option><option>إسبانيا</option><option>هولندا</option>
+              <option>السويد</option><option>النرويج</option><option>الدنمارك</option>
+              <option>كندا</option><option>أمريكا</option><option>أستراليا</option>
+              <option value="أخرى">أخرى</option>
             </select>
+            <input type="text" id="new-country-other" placeholder="اكتب اسم الدولة" style="display:none;margin-top:8px;" autocomplete="off" />
             <div class="err" id="err-new-country">هذا الحقل مطلوب</div>
           </div>
 
@@ -719,8 +724,10 @@
     else { nat.classList.remove('invalid'); natErr.classList.remove('show'); }
 
     var country = document.getElementById('new-country');
+    var countryOther = document.getElementById('new-country-other');
     var countryErr = document.getElementById('err-new-country');
-    if (!country.value) { country.classList.add('invalid'); countryErr.classList.add('show'); valid = false; }
+    var countryVal = country.value === 'أخرى' ? countryOther.value.trim() : country.value;
+    if (!countryVal) { country.classList.add('invalid'); countryErr.classList.add('show'); valid = false; }
     else { country.classList.remove('invalid'); countryErr.classList.remove('show'); }
 
     var durNew = document.querySelector('input[name="new-duration"]:checked');
@@ -740,7 +747,7 @@
         sex: document.querySelector('input[name="new-gender"]:checked').value === 'male' ? 'ذكر' : 'أنثى',
         phone: document.getElementById('new-phone').value,
         nationality: document.getElementById('new-nationality').value,
-        country: document.getElementById('new-country').value,
+        country: (document.getElementById('new-country').value === 'أخرى' ? document.getElementById('new-country-other').value.trim() : document.getElementById('new-country').value),
         duration: selectedDurNew ? selectedDurNew.value : '15',
         price: selectedDurNew ? (DURATION_PRICES[selectedDurNew.value] || '') : ''
       };
@@ -881,6 +888,18 @@
   // Live clear on inputs
   // أسعار المدد
   var DURATION_PRICES = { '6':6, '12':10, '15':12, '24':18, '30':24 };
+
+  function toggleCountryOther() {
+    var sel = document.getElementById('new-country');
+    var other = document.getElementById('new-country-other');
+    if (sel.value === 'أخرى') {
+      other.style.display = 'block';
+      other.focus();
+    } else {
+      other.style.display = 'none';
+      other.value = '';
+    }
+  }
 
   function setupDurationListeners(groupName, previewId, amountId, errId) {
     document.querySelectorAll('input[name="' + groupName + '"]').forEach(function(r) {
