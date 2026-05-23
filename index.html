@@ -749,7 +749,7 @@
           newBtn.disabled = false;
           newBtn.textContent = 'إرسال التسجيل';
           if (res.success) {
-            sendToGSheet(newData);
+            sendToGSheet({...newData, clientType: res.clientType || 'new'});
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
             document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
