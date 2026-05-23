@@ -458,6 +458,22 @@
           </div>
 
           <div class="field">
+            <label>دولة الاستخدام <span class="req">*</span></label>
+            <select id="new-country" autocomplete="new-password">
+              <option value="" disabled selected>— اختر —</option>
+              <option>الكويت</option><option>السعودية</option><option>الإمارات</option>
+              <option>قطر</option><option>سلطنة عمان</option><option>البحرين</option>
+              <option>العراق</option><option>اليمن</option><option>سوريا</option>
+              <option>فلسطين</option><option>لبنان</option><option>الاردن</option>
+              <option>مصر</option><option>المغرب</option><option>تونس</option>
+              <option>ليبيا</option><option>السودان</option><option>تركيا</option>
+              <option>الهند</option><option>فلبين</option><option>باكستان</option>
+              <option>أخرى</option>
+            </select>
+            <div class="err" id="err-new-country">هذا الحقل مطلوب</div>
+          </div>
+
+          <div class="field">
             <label>مدة الاشتراك <span class="req">*</span></label>
             <div class="duration-grid" id="new-duration-grid">
               <label class="duration-option">
@@ -603,6 +619,7 @@
         sex:         data.sex         || '',
         phone:       data.phone       || '',
         nationality: data.nationality || '',
+        country:     data.country     || '',
         duration:    data.duration    || '',
         price:       data.price       || '',
         clientType:  data.clientType  || ''
@@ -701,6 +718,11 @@
     if (!nat.value) { nat.classList.add('invalid'); natErr.classList.add('show'); valid = false; }
     else { nat.classList.remove('invalid'); natErr.classList.remove('show'); }
 
+    var country = document.getElementById('new-country');
+    var countryErr = document.getElementById('err-new-country');
+    if (!country.value) { country.classList.add('invalid'); countryErr.classList.add('show'); valid = false; }
+    else { country.classList.remove('invalid'); countryErr.classList.remove('show'); }
+
     var durNew = document.querySelector('input[name="new-duration"]:checked');
     var durNewErr = document.getElementById('err-new-duration');
     if (!durNew) { durNewErr.classList.add('show'); valid = false; }
@@ -718,6 +740,7 @@
         sex: document.querySelector('input[name="new-gender"]:checked').value === 'male' ? 'ذكر' : 'أنثى',
         phone: document.getElementById('new-phone').value,
         nationality: document.getElementById('new-nationality').value,
+        country: document.getElementById('new-country').value,
         duration: selectedDurNew ? selectedDurNew.value : '15',
         price: selectedDurNew ? (DURATION_PRICES[selectedDurNew.value] || '') : ''
       };
@@ -883,6 +906,10 @@
       this.classList.remove('invalid');
       document.getElementById('err-new-nationality').classList.remove('show');
     });
+    document.getElementById('new-country').addEventListener('change', function() {
+      this.classList.remove('invalid');
+      document.getElementById('err-new-country').classList.remove('show');
+    });
     document.querySelectorAll('input[name="new-gender"]').forEach(function(r) {
       r.addEventListener('change', function() {
         document.querySelectorAll('#screen-new .gender-option').forEach(function(el){ el.classList.remove('invalid'); });
@@ -960,11 +987,11 @@
         let existingAccount = null;
         try {
           const iptvSnap = await getDocs(collection(db, "iptv"));
-          for (const docSnap of iptvSnap.docs) {
-            const raw = docSnap.data().list || docSnap.data().accounts || "[]";
-            const accs = JSON.parse(raw);
+          const accountsDoc = iptvSnap.docs.find(d => d.id === 'accounts');
+          if (accountsDoc) {
+            const accs = JSON.parse(accountsDoc.data().list || "[]");
             const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
-            if (found) { existingAccount = found; break; }
+            if (found) existingAccount = found;
           }
         } catch(e) {}
 
@@ -1000,15 +1027,15 @@
         if (blockedDoc) return { success: false, reason: "duplicate_username" };
       }
 
-      // فحص iptv/accounts
-      for (const docSnap of iptvSnap.docs) {
-        try {
-          const raw2 = docSnap.data().list || docSnap.data().accounts || "[]";
-          const accs = JSON.parse(raw2);
+      // فحص iptv/accounts بس (مش trash)
+      try {
+        const accountsDoc = iptvSnap.docs.find(d => d.id === 'accounts');
+        if (accountsDoc) {
+          const accs = JSON.parse(accountsDoc.data().list || "[]");
           const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
           if (found) return { success: false, reason: "duplicate_username" };
-        } catch(e) {}
-      }
+        }
+      } catch(e) {}
 
       // فحص Google Sheets
       const { uMatch, pMatch } = sheetData;
