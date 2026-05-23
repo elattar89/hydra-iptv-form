@@ -728,21 +728,7 @@
             document.getElementById('new-success').style.display = 'block';
             document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
             // reset الفورم
-            setTimeout(function() {
-              document.getElementById('new-form-container').style.display = 'block';
-              document.getElementById('new-success').style.display = 'none';
-              ['new-username','new-fullname','new-phone'].forEach(function(id){
-                var el = document.getElementById(id); if(el) el.value = '';
-              });
-              var natEl = document.getElementById('new-nationality');
-              if (natEl) natEl.value = '';
-              document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
-              document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
-              var priceEl = document.getElementById('new-price-preview');
-              if (priceEl) priceEl.classList.remove('show');
-              var dupBanner = document.getElementById('dup-banner-new');
-              if (dupBanner) dupBanner.remove();
-            }, 4000);
+            setTimeout(function() { goTo('screen-welcome'); }, 3000);
           } else if (res.reason === 'duplicate_username') {
             var dupBanner = document.getElementById('dup-banner-new');
             if (!dupBanner) {
@@ -764,19 +750,7 @@
         document.getElementById('new-form-container').style.display = 'none';
         document.getElementById('new-success').style.display = 'block';
         document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
-        setTimeout(function() {
-          document.getElementById('new-form-container').style.display = 'block';
-          document.getElementById('new-success').style.display = 'none';
-          ['new-username','new-fullname','new-phone'].forEach(function(id){
-            var el = document.getElementById(id); if(el) el.value = '';
-          });
-          var natEl = document.getElementById('new-nationality');
-          if (natEl) natEl.value = '';
-          document.querySelectorAll('input[name="new-gender"]').forEach(function(r){ r.checked = false; });
-          document.querySelectorAll('input[name="new-duration"]').forEach(function(r){ r.checked = false; });
-          var priceEl = document.getElementById('new-price-preview');
-          if (priceEl) priceEl.classList.remove('show');
-        }, 4000);
+        setTimeout(function() { goTo('screen-welcome'); }, 3000);
       }
     } else {
       var first = document.querySelector('#screen-new .invalid, #screen-new .err.show');
@@ -832,16 +806,7 @@
           document.getElementById('renew-form-container').style.display = 'none';
           document.getElementById('renew-success').style.display = 'block';
           document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
-          setTimeout(function() {
-            document.getElementById('renew-form-container').style.display = 'block';
-            document.getElementById('renew-success').style.display = 'none';
-            ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
-              var el = document.getElementById(id); if(el) el.value = '';
-            });
-            document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
-            var renewPrice = document.getElementById('renew-price-preview');
-            if (renewPrice) renewPrice.classList.remove('show');
-          }, 3000);
+          setTimeout(function() { goTo('screen-welcome'); }, 3000);
         });
       } else {
         renewBtn.disabled = false;
@@ -849,16 +814,7 @@
         document.getElementById('renew-form-container').style.display = 'none';
         document.getElementById('renew-success').style.display = 'block';
         document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
-        setTimeout(function() {
-          document.getElementById('renew-form-container').style.display = 'block';
-          document.getElementById('renew-success').style.display = 'none';
-          ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
-            var el = document.getElementById(id); if(el) el.value = '';
-          });
-          document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
-          var renewPrice = document.getElementById('renew-price-preview');
-          if (renewPrice) renewPrice.classList.remove('show');
-        }, 3000);
+        setTimeout(function() { goTo('screen-welcome'); }, 3000);
       }
     } else {
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
