@@ -753,6 +753,7 @@
         newBtn.textContent = 'إرسال التسجيل';
         _submittingNew = false;
         alert('جاري تحميل النظام، حاول مرة أخرى بعد ثانية.');
+        _submittingRenew = false;
       }
     } else {
       var first = document.querySelector('#screen-new .invalid, #screen-new .err.show');
@@ -761,7 +762,10 @@
   }
 
   // ===== RENEW SUBSCRIPTION =====
+  var _submittingRenew = false;
   function submitRenew() {
+    if (_submittingRenew) return;
+    _submittingRenew = true;
     var valid = true;
 
     var fn = document.getElementById('renew-fullname');
@@ -807,6 +811,7 @@
           if (res.success) {
             // بعت على Sheets بس بعد ما Firebase قبل
             sendToGSheet(renewData);
+            _submittingRenew = false;
             document.getElementById('renew-form-container').style.display = 'none';
             document.getElementById('renew-success').style.display = 'block';
             document.getElementById('renew-success').scrollIntoView({behavior:'smooth', block:'center'});
@@ -821,6 +826,7 @@
             }
             dupB.textContent = '⚠️ لديك طلب تجديد قيد المراجعة بالفعل، انتظر الموافقة عليه.';
             dupB.scrollIntoView({behavior:'smooth', block:'center'});
+            _submittingRenew = false;
           } else if (res.reason === 'not_found') {
             var notB = document.getElementById('dup-banner-renew');
             if (!notB) {
@@ -831,7 +837,9 @@
             }
             notB.textContent = '⚠️ اسم المستخدم غير مسجل لدينا، تحقق من الاسم أو تواصل معنا.';
             notB.scrollIntoView({behavior:'smooth', block:'center'});
+            _submittingRenew = false;
           } else {
+            _submittingRenew = false;
             alert('حدث خطأ، حاول مرة أخرى.');
           }
         });
@@ -841,6 +849,7 @@
         alert('جاري تحميل النظام، حاول مرة أخرى بعد ثانية.');
       }
     } else {
+      _submittingRenew = false;
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
       if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
