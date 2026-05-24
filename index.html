@@ -322,6 +322,11 @@
   .price-preview .pp-label { font-size: 0.82rem; opacity: 0.8; }
   .price-preview .pp-amount { font-size: 1.3rem; font-weight: 700; color: var(--accent-light); }
 
+  /* ===== PHONE DIAL ===== */
+  .phone-group { display:flex; gap:6px; align-items:stretch; }
+  .dial-select { width:130px; flex-shrink:0; }
+  .phone-number-input { flex:1; min-width:0; }
+
   /* ===== MOBILE ===== */
   @media (max-width: 480px) {
     body { padding: 1rem 0.6rem; }
@@ -437,7 +442,38 @@
 
           <div class="field">
             <label>رقم الهاتف <span class="req">*</span></label>
-            <input id="new-phone" autocomplete="new-password" type="tel" placeholder="" />
+            <div class="phone-group">
+              <select id="new-phone-dial" class="dial-select" autocomplete="new-password">
+<option value="">—</option>
+<option value="+965">🇰🇼 +965 الكويت</option>
+<option value="+966">🇸🇦 +966 السعودية</option>
+<option value="+971">🇦🇪 +971 الإمارات</option>
+<option value="+974">🇶🇦 +974 قطر</option>
+<option value="+968">🇴🇲 +968 عمان</option>
+<option value="+973">🇧🇭 +973 البحرين</option>
+<option value="+964">🇮🇶 +964 العراق</option>
+<option value="+967">🇾🇪 +967 اليمن</option>
+<option value="+963">🇸🇾 +963 سوريا</option>
+<option value="+961">🇱🇧 +961 لبنان</option>
+<option value="+962">🇯🇴 +962 الأردن</option>
+<option value="+970">🇵🇸 +970 فلسطين</option>
+<option value="+20">🇪🇬 +20 مصر</option>
+<option value="+212">🇲🇦 +212 المغرب</option>
+<option value="+216">🇹🇳 +216 تونس</option>
+<option value="+218">🇱🇾 +218 ليبيا</option>
+<option value="+249">🇸🇩 +249 السودان</option>
+<option value="+90">🇹🇷 +90 تركيا</option>
+<option value="+91">🇮🇳 +91 الهند</option>
+<option value="+92">🇵🇰 +92 باكستان</option>
+<option value="+63">🇵🇭 +63 فلبين</option>
+<option value="+44">🇬🇧 +44 بريطانيا</option>
+<option value="+33">🇫🇷 +33 فرنسا</option>
+<option value="+49">🇩🇪 +49 ألمانيا</option>
+<option value="+1">🇺🇸 +1 أمريكا/كندا</option>
+<option value="+61">🇦🇺 +61 أستراليا</option>
+              </select>
+              <input id="new-phone" class="phone-number-input" autocomplete="new-password" type="tel" placeholder="رقم الهاتف" />
+            </div>
             <div class="err" id="err-new-phone">هذا الحقل مطلوب</div>
           </div>
 
@@ -553,7 +589,38 @@
 
           <div class="field">
             <label>رقم الهاتف المسجل لدينا <span class="req">*</span></label>
-            <input id="renew-phone" autocomplete="new-password" type="tel" placeholder="" />
+            <div class="phone-group">
+              <select id="renew-phone-dial" class="dial-select" autocomplete="new-password">
+<option value="">—</option>
+<option value="+965">🇰🇼 +965 الكويت</option>
+<option value="+966">🇸🇦 +966 السعودية</option>
+<option value="+971">🇦🇪 +971 الإمارات</option>
+<option value="+974">🇶🇦 +974 قطر</option>
+<option value="+968">🇴🇲 +968 عمان</option>
+<option value="+973">🇧🇭 +973 البحرين</option>
+<option value="+964">🇮🇶 +964 العراق</option>
+<option value="+967">🇾🇪 +967 اليمن</option>
+<option value="+963">🇸🇾 +963 سوريا</option>
+<option value="+961">🇱🇧 +961 لبنان</option>
+<option value="+962">🇯🇴 +962 الأردن</option>
+<option value="+970">🇵🇸 +970 فلسطين</option>
+<option value="+20">🇪🇬 +20 مصر</option>
+<option value="+212">🇲🇦 +212 المغرب</option>
+<option value="+216">🇹🇳 +216 تونس</option>
+<option value="+218">🇱🇾 +218 ليبيا</option>
+<option value="+249">🇸🇩 +249 السودان</option>
+<option value="+90">🇹🇷 +90 تركيا</option>
+<option value="+91">🇮🇳 +91 الهند</option>
+<option value="+92">🇵🇰 +92 باكستان</option>
+<option value="+63">🇵🇭 +63 فلبين</option>
+<option value="+44">🇬🇧 +44 بريطانيا</option>
+<option value="+33">🇫🇷 +33 فرنسا</option>
+<option value="+49">🇩🇪 +49 ألمانيا</option>
+<option value="+1">🇺🇸 +1 أمريكا/كندا</option>
+<option value="+61">🇦🇺 +61 أستراليا</option>
+              </select>
+              <input id="renew-phone" class="phone-number-input" autocomplete="new-password" type="tel" placeholder="رقم الهاتف" />
+            </div>
             <div class="err" id="err-renew-phone">هذا الحقل مطلوب</div>
           </div>
 
@@ -644,6 +711,7 @@
       var newSuccess = document.getElementById('new-success');
       if (newForm) newForm.style.display = 'block';
       if (newSuccess) newSuccess.style.display = 'none';
+      document.getElementById('new-phone-dial').value = '';
       ['new-username','new-fullname','new-phone'].forEach(function(id){
         var el = document.getElementById(id); if(el) el.value = '';
       });
@@ -661,6 +729,7 @@
       var renewSuccess = document.getElementById('renew-success');
       if (renewForm) renewForm.style.display = 'block';
       if (renewSuccess) renewSuccess.style.display = 'none';
+      document.getElementById('renew-phone-dial').value = '';
       ['renew-fullname','renew-username','renew-phone'].forEach(function(id){
         var el = document.getElementById(id); if(el) el.value = '';
       });
@@ -745,7 +814,7 @@
         username: document.getElementById('new-username').value,
         name: document.getElementById('new-fullname').value,
         sex: document.querySelector('input[name="new-gender"]:checked').value === 'male' ? 'ذكر' : 'أنثى',
-        phone: document.getElementById('new-phone').value,
+        phone: (document.getElementById('new-phone-dial').value + document.getElementById('new-phone').value).trim(),
         nationality: document.getElementById('new-nationality').value,
         country: (document.getElementById('new-country').value === 'أخرى' ? document.getElementById('new-country-other').value.trim() : document.getElementById('new-country').value),
         duration: selectedDurNew ? selectedDurNew.value : '15',
@@ -828,7 +897,7 @@
         username: document.getElementById('renew-username').value,
         name: document.getElementById('renew-fullname').value,
         sex: '',
-        phone: document.getElementById('renew-phone').value,
+        phone: (document.getElementById('renew-phone-dial').value + document.getElementById('renew-phone').value).trim(),
         nationality: '',
         duration: selectedDurRenew ? selectedDurRenew.value : '15',
         price: selectedDurRenew ? (DURATION_PRICES[selectedDurRenew.value] || '') : ''
