@@ -488,6 +488,8 @@
               <option>مصر</option><option>المغرب</option><option>تونس</option>
               <option>ليبيا</option><option>السودان</option><option>تركيا</option>
               <option>الهند</option><option>فلبين</option><option>باكستان</option>
+              <option>بريطانيا</option><option>فرنسا</option><option>ألمانيا</option>
+              <option>أمريكا</option><option>كندا</option><option>أستراليا</option>
               <option>أخرى</option>
             </select>
             <div class="err" id="err-new-nationality">هذا الحقل مطلوب</div>
@@ -495,7 +497,7 @@
 
           <div class="field">
             <label>دولة الاستخدام <span class="req">*</span></label>
-            <select id="new-country" autocomplete="new-password" onchange="toggleCountryOther()">
+            <select id="new-country" autocomplete="new-password" onchange="toggleCountryOther();updatePricesByCountry()">
               <option value="" disabled selected>— اختر —</option>
               <option>الكويت</option><option>السعودية</option><option>الإمارات</option>
               <option>قطر</option><option>سلطنة عمان</option><option>البحرين</option>
@@ -507,7 +509,8 @@
               <option>بريطانيا</option><option>فرنسا</option><option>ألمانيا</option>
               <option>إيطاليا</option><option>إسبانيا</option><option>هولندا</option>
               <option>السويد</option><option>النرويج</option><option>الدنمارك</option>
-              <option>كندا</option><option>أمريكا</option><option>أستراليا</option>
+              <option>بريطانيا</option><option>فرنسا</option><option>ألمانيا</option>
+              <option>أمريكا</option><option>كندا</option><option>أستراليا</option>
               <option value="أخرى">أخرى</option>
             </select>
             <input type="text" id="new-country-other" placeholder="اكتب اسم الدولة" style="display:none;margin-top:8px;" autocomplete="off" />
@@ -520,27 +523,27 @@
               <label class="duration-option">
                 <input type="radio" name="new-duration" value="6" data-price="6" />
                 <span class="dur-months">6 شهور</span>
-                <span class="dur-price">6 دينار</span>
+                <span class="dur-price" id="new-dp-6">6 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="new-duration" value="12" data-price="10" />
                 <span class="dur-months">12 شهر</span>
-                <span class="dur-price">10 دينار</span>
+                <span class="dur-price" id="new-dp-12">10 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="new-duration" value="15" data-price="12" />
                 <span class="dur-months">15 شهر</span>
-                <span class="dur-price">12 دينار</span>
+                <span class="dur-price" id="new-dp-15">12 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="new-duration" value="24" data-price="18" />
                 <span class="dur-months">24 شهر</span>
-                <span class="dur-price">18 دينار</span>
+                <span class="dur-price" id="new-dp-24">18 دينار</span>
               </label>
               <label class="duration-option" style="grid-column: span 2;">
-                <input type="radio" name="new-duration" value="30" data-price="24" />
+                <input type="radio" name="new-duration" value="30" data-price="22" />
                 <span class="dur-months">30 شهر</span>
-                <span class="dur-price">24 دينار</span>
+                <span class="dur-price" id="new-dp-30">22 دينار</span>
               </label>
             </div>
             <div class="err" id="err-new-duration">يجب اختيار مدة الاشتراك</div>
@@ -549,6 +552,9 @@
               <span class="pp-amount" id="new-price-amount">—</span>
             </div>
           </div>
+
+          <!-- ملاحظة الدولة -->
+          <div id="country-note" style="display:none;margin-bottom:1rem;border-radius:12px;padding:1rem 1.2rem;font-size:0.82rem;line-height:1.8;font-family:Cairo,sans-serif;"></div>
 
           <button class="submit-btn" onclick="submitNew()">إرسال التسجيل</button>
         </div>
@@ -956,7 +962,75 @@
 
   // Live clear on inputs
   // أسعار المدد
-  var DURATION_PRICES = { '6':6, '12':10, '15':12, '24':18, '30':24 };
+  var DURATION_PRICES = { '6':6, '12':10, '15':12, '24':18, '30':22 };
+
+  // أسعار حسب الدولة
+  var COUNTRY_PRICES = {
+    'الكويت':   { prices: { '6':6,   '12':10,  '15':12,  '24':18,  '30':22  }, currency: 'دينار'  },
+    'مصر':      { prices: { '6':300, '12':500, '15':600, '24':900, '30':1200 }, currency: 'جنيه'   },
+    'default':  { prices: { '6':20,  '12':35,  '15':40,  '24':60,  '30':75  }, currency: '$ USD'  }
+  };
+
+  var EGYPT_NOTE = `<div style="background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;padding:1rem 1.2rem;color:#991b1b;">
+    <div style="font-weight:700;margin-bottom:6px;">⚠️ تنبيه مهم</div>
+    <ul style="margin:0;padding-right:1.2rem;list-style:disc;line-height:2;">
+      <li>هذا الحساب يعمل فقط داخل نطاق جمهورية مصر العربية، وفي حال تشغيله من خارج مصر سيتم إيقاف الحساب تماماً ولا يتم استرداد المبلغ.</li>
+      <li>هذا الحساب يعمل فقط على جهاز واحد في نفس الوقت.</li>
+    </ul>
+  </div>`;
+
+  var WORLD_NOTE = `<div style="background:rgba(34,197,94,0.08);border:1.5px solid rgba(34,197,94,0.25);border-radius:12px;padding:1rem 1.2rem;color:#166534;">
+    <div style="font-weight:700;margin-bottom:6px;">✅ معلومة مهمة</div>
+    <ul style="margin:0;padding-right:1.2rem;list-style:disc;line-height:2;">
+      <li>هذا الاشتراك يعمل في أي دولة في العالم دون انقطاع الخدمة، ومصرح لك باستخدامه أثناء سفرك بين دول العالم.</li>
+      <li>هذا الحساب يعمل فقط على جهاز واحد في نفس الوقت.</li>
+    </ul>
+  </div>`;
+
+  function updatePricesByCountry() {
+    var country = document.getElementById('new-country').value;
+    if (country === 'أخرى') {
+      var other = document.getElementById('new-country-other').value.trim();
+      country = other || 'أخرى';
+    }
+
+    var cfg = COUNTRY_PRICES[country] || COUNTRY_PRICES['default'];
+    var durations = ['6','12','15','24','30'];
+
+    // تحديث الأسعار في الكروت
+    durations.forEach(function(d) {
+      var el = document.getElementById('new-dp-' + d);
+      if (el) el.textContent = cfg.prices[d] + ' ' + cfg.currency;
+      // تحديث data-price
+      var radio = document.querySelector('input[name="new-duration"][value="' + d + '"]');
+      if (radio) radio.setAttribute('data-price', cfg.prices[d]);
+    });
+
+    // تحديث DURATION_PRICES
+    DURATION_PRICES['6']  = cfg.prices['6'];
+    DURATION_PRICES['12'] = cfg.prices['12'];
+    DURATION_PRICES['15'] = cfg.prices['15'];
+    DURATION_PRICES['24'] = cfg.prices['24'];
+    DURATION_PRICES['30'] = cfg.prices['30'];
+
+    // تحديث السعر المعروض لو في اختيار
+    var checked = document.querySelector('input[name="new-duration"]:checked');
+    if (checked) {
+      document.getElementById('new-price-amount').textContent = cfg.prices[checked.value] + ' ' + cfg.currency;
+    }
+
+    // تحديث الملاحظة
+    var noteEl = document.getElementById('country-note');
+    if (country === 'مصر') {
+      noteEl.innerHTML = EGYPT_NOTE;
+      noteEl.style.display = 'block';
+    } else if (country && country !== 'أخرى' && country !== '') {
+      noteEl.innerHTML = WORLD_NOTE;
+      noteEl.style.display = 'block';
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
 
   function toggleCountryOther() {
     var sel = document.getElementById('new-country');
@@ -974,7 +1048,14 @@
     document.querySelectorAll('input[name="' + groupName + '"]').forEach(function(r) {
       r.addEventListener('change', function() {
         var price = DURATION_PRICES[this.value] || 0;
-        document.getElementById(amountId).textContent = price + ' دينار';
+        // احسب العملة من الدولة المختارة
+        var country = '';
+        var countryEl = document.getElementById('new-country');
+        if (countryEl) {
+          country = countryEl.value === 'أخرى' ? (document.getElementById('new-country-other')||{value:''}).value.trim() : countryEl.value;
+        }
+        var cfg = (typeof COUNTRY_PRICES !== 'undefined' && COUNTRY_PRICES[country]) ? COUNTRY_PRICES[country] : { currency: 'دينار' };
+        document.getElementById(amountId).textContent = price + ' ' + cfg.currency;
         document.getElementById(previewId).classList.add('show');
         document.getElementById(errId).classList.remove('show');
       });
