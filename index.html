@@ -653,7 +653,7 @@
 
           <div class="field">
             <label>اسم المستخدم المراد تجديده <span class="req">*</span></label>
-            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" />
+            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="showRenewDuration()" />
             <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
 
@@ -758,33 +758,33 @@
             <div class="err" id="err-renew-phone">هذا الحقل مطلوب</div>
           </div>
 
-          <div class="field">
+          <div class="field" id="renew-duration-field" style="display:none;">
             <label>مدة الاشتراك <span class="req">*</span></label>
             <div class="duration-grid" id="renew-duration-grid">
               <label class="duration-option">
                 <input type="radio" name="renew-duration" value="6" data-price="6" />
                 <span class="dur-months">6 شهور</span>
-                <span class="dur-price">6 دينار</span>
+                <span class="dur-price" id="renew-dp-6">6 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="renew-duration" value="12" data-price="10" />
                 <span class="dur-months">12 شهر</span>
-                <span class="dur-price">10 دينار</span>
+                <span class="dur-price" id="renew-dp-12">10 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="renew-duration" value="15" data-price="12" />
                 <span class="dur-months">15 شهر</span>
-                <span class="dur-price">12 دينار</span>
+                <span class="dur-price" id="renew-dp-15">12 دينار</span>
               </label>
               <label class="duration-option">
                 <input type="radio" name="renew-duration" value="24" data-price="18" />
                 <span class="dur-months">24 شهر</span>
-                <span class="dur-price">18 دينار</span>
+                <span class="dur-price" id="renew-dp-24">18 دينار</span>
               </label>
               <label class="duration-option" style="grid-column: span 2;">
-                <input type="radio" name="renew-duration" value="30" data-price="24" />
+                <input type="radio" name="renew-duration" value="30" data-price="22" />
                 <span class="dur-months">30 شهر</span>
-                <span class="dur-price">24 دينار</span>
+                <span class="dur-price" id="renew-dp-30">22 دينار</span>
               </label>
             </div>
             <div class="err" id="err-renew-duration">يجب اختيار مدة الاشتراك</div>
@@ -1182,6 +1182,46 @@
     }
   }
 
+  var _renewLookupTimer = null;
+  function showRenewDuration() {
+    var user = document.getElementById('renew-username').value.trim();
+    var durField = document.getElementById('renew-duration-field');
+    if (!user) {
+      if (durField) durField.style.display = 'none';
+      return;
+    }
+    // إظهار المدة فوراً بالأسعار الافتراضية
+    if (durField) durField.style.display = 'block';
+
+    // دور على الدولة في Firebase بعد توقف الكتابة
+    clearTimeout(_renewLookupTimer);
+    _renewLookupTimer = setTimeout(function() {
+      fetchRenewCountry(user);
+    }, 600);
+  }
+
+  async function fetchRenewCountry(username) {
+    if (!window.fetchAccountCountry) return;
+    const country = await window.fetchAccountCountry(username);
+    if (country) updateRenewPricesByCountry(country);
+  }
+
+  function updateRenewPricesByCountry(country) {
+    var cfg = COUNTRY_PRICES[country] || COUNTRY_PRICES['default'];
+    var durations = ['6','12','15','24','30'];
+    durations.forEach(function(d) {
+      var el = document.getElementById('renew-dp-' + d);
+      if (el) el.textContent = cfg.prices[d] + ' ' + cfg.currency;
+      var radio = document.querySelector('input[name="renew-duration"][value="' + d + '"]');
+      if (radio) radio.setAttribute('data-price', cfg.prices[d]);
+    });
+    // تحديث السعر المعروض لو في اختيار
+    var checked = document.querySelector('input[name="renew-duration"]:checked');
+    if (checked) {
+      document.getElementById('renew-price-amount').textContent = cfg.prices[checked.value] + ' ' + cfg.currency;
+    }
+  }
+
   function toggleCountryOther() {
     var sel = document.getElementById('new-country');
     var other = document.getElementById('new-country-other');
@@ -1283,6 +1323,18 @@
   }
 
   // ===== حفظ الطلب =====
+  // جلب دولة الاستخدام من Firebase بالاسم
+  window.fetchAccountCountry = async function(username) {
+    try {
+      const iptvSnap = await getDocs(collection(db, "iptv"));
+      const accountsDoc = iptvSnap.docs.find(d => d.id === 'accounts');
+      if (!accountsDoc) return null;
+      const accs = JSON.parse(accountsDoc.data().list || "[]");
+      const found = accs.find(a => a.username && a.username.trim().toLowerCase() === username.toLowerCase());
+      return found ? (found.country || null) : null;
+    } catch(e) { return null; }
+  };
+
   window.saveRegistration = async function(data) {
     try {
       const username = data.username.trim();
