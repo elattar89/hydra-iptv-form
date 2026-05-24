@@ -838,6 +838,15 @@
     var target = document.getElementById(screenId);
     target.classList.add('active');
 
+    // لو راح على screen-renew، reset المدة
+    if (screenId === 'screen-renew') {
+      var rDurF = document.getElementById('renew-duration-field');
+      if (rDurF) rDurF.style.display = 'none';
+      document.querySelectorAll('input[name="renew-duration"]').forEach(function(r){ r.checked = false; });
+      var rPrice = document.getElementById('renew-price-preview');
+      if (rPrice) rPrice.classList.remove('show');
+    }
+
     // لو رجع للـ welcome، reset كل الفورمز
     if (screenId === 'screen-welcome') {
       // reset اشتراك جديد
