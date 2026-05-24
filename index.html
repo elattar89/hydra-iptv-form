@@ -415,7 +415,7 @@
 
           <div class="field">
             <label>اسم المستخدم المراد استخدامه <span class="req">*</span></label>
-            <input id="new-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" />
+            <input id="new-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_.-]/g,'')" />
             <div class="err" id="err-new-username">هذا الحقل مطلوب</div>
           </div>
 
@@ -653,7 +653,7 @@
 
           <div class="field">
             <label>اسم المستخدم المراد تجديده <span class="req">*</span></label>
-            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="showRenewDuration()" />
+            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_.-]/g,'');showRenewDuration()" />
             <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
 
