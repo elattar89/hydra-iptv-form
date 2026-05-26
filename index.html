@@ -1231,6 +1231,25 @@
     }
   }
 
+  async function sendEmailNotification(data) {
+    try {
+      await fetch('https://script.google.com/macros/s/AKfycbwKJ2ai3gvRlhZzWKiKy4vq1iIx4vd2NAbO_go44jClABthEMRGH_kwHpJgE7VOsTLv/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'notification',
+          name:       data.name       || '',
+          username:   data.username   || '',
+          clientType: data.clientType || 'new',
+          country:    data.country    || '',
+          duration:   data.duration   || '',
+          price:      data.price      || '',
+          phone:      data.phone      || ''
+        })
+      });
+    } catch(e) { console.warn('Email notification failed:', e); }
+  }
+
   function toggleCountryOther() {
     var sel = document.getElementById('new-country');
     var other = document.getElementById('new-country-other');
