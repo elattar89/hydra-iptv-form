@@ -969,6 +969,7 @@
           newBtn.textContent = 'إرسال التسجيل';
           if (res.success) {
             sendToGSheet({...newData, clientType: res.clientType || 'new'});
+            sendEmailNotification({...newData, clientType: res.clientType || 'new'});
             document.getElementById('new-form-container').style.display = 'none';
             document.getElementById('new-success').style.display = 'block';
             document.getElementById('new-success').scrollIntoView({behavior:'smooth', block:'center'});
@@ -1053,6 +1054,7 @@
           if (res.success) {
             // بعت على Sheets بس بعد ما Firebase قبل
             sendToGSheet(renewData);
+            sendEmailNotification(renewData);
             _submittingRenew = false;
             document.getElementById('renew-form-container').style.display = 'none';
             document.getElementById('renew-success').style.display = 'block';
