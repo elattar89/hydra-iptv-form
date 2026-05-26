@@ -1233,19 +1233,18 @@
 
   async function sendEmailNotification(data) {
     try {
-      await fetch('https://script.google.com/macros/s/AKfycbwKJ2ai3gvRlhZzWKiKy4vq1iIx4vd2NAbO_go44jClABthEMRGH_kwHpJgE7VOsTLv/exec', {
+      var params = new URLSearchParams();
+      params.append('type', 'notification');
+      params.append('name',       data.name       || '');
+      params.append('username',   data.username   || '');
+      params.append('clientType', data.clientType || 'new');
+      params.append('country',    data.country    || '');
+      params.append('duration',   data.duration   || '');
+      params.append('price',      data.price      || '');
+      params.append('phone',      data.phone      || '');
+      await fetch('https://script.google.com/macros/s/AKfycbzwgvSEWwZO-861Xx_k9MCQEZCgByYWhg60puRzmYvwD1-KVG_xsy0bX2eD06xtMt86/exec', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'notification',
-          name:       data.name       || '',
-          username:   data.username   || '',
-          clientType: data.clientType || 'new',
-          country:    data.country    || '',
-          duration:   data.duration   || '',
-          price:      data.price      || '',
-          phone:      data.phone      || ''
-        })
+        body: params
       });
     } catch(e) { console.warn('Email notification failed:', e); }
   }
