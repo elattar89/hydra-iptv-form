@@ -309,6 +309,25 @@
     margin-top: 2px;
   }
   .duration-option:has(input:checked) .dur-price { color: var(--accent); font-weight: 600; }
+  .duration-option--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
+  }
+  .duration-option--disabled::after {
+    content: "غير متاح";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
 
   .price-preview {
     background: linear-gradient(135deg, #1a1a2e, #0f3460);
@@ -591,8 +610,8 @@
                 <span class="dur-months">6 شهور</span>
                 <span class="dur-price" id="new-dp-6">6 دينار</span>
               </label>
-              <label class="duration-option">
-                <input type="radio" name="new-duration" value="12" data-price="10" />
+              <label class="duration-option duration-option--disabled" onclick="showUnavailableMsg(event)">
+                <input type="radio" name="new-duration" value="12" data-price="10" disabled />
                 <span class="dur-months">12 شهر</span>
                 <span class="dur-price" id="new-dp-12">10 دينار</span>
               </label>
@@ -768,8 +787,8 @@
                 <span class="dur-months">6 شهور</span>
                 <span class="dur-price" id="renew-dp-6">6 دينار</span>
               </label>
-              <label class="duration-option">
-                <input type="radio" name="renew-duration" value="12" data-price="10" />
+              <label class="duration-option duration-option--disabled" onclick="showUnavailableMsg(event)">
+                <input type="radio" name="renew-duration" value="12" data-price="10" disabled />
                 <span class="dur-months">12 شهر</span>
                 <span class="dur-price" id="renew-dp-12">10 دينار</span>
               </label>
@@ -1313,6 +1332,12 @@
     setupDurationListeners('new-duration',   'new-price-preview',   'new-price-amount',   'err-new-duration');
     setupDurationListeners('renew-duration', 'renew-price-preview', 'renew-price-amount', 'err-renew-duration');
   });
+
+  function showUnavailableMsg(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    alert('العرض غير متاح حالياً');
+  }
 </script>
 
 <script type="module">
