@@ -714,12 +714,6 @@
           <div class="section-title">بيانات التجديد</div>
 
           <div class="field">
-            <label>الاسم الكامل <span class="req">*</span></label>
-            <input id="renew-fullname" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[0-9\u0600-\u06FF\u0750-\u077F]/g,'')" onkeydown="return handleFullnameKey(event)" />
-            <div class="err" id="err-renew-fullname">هذا الحقل مطلوب</div>
-          </div>
-
-          <div class="field">
             <label>رقم الهاتف المسجل لدينا <span class="req">*</span></label>
             <div class="phone-group">
               <select id="renew-phone-dial" class="dial-select" autocomplete="new-password">
@@ -826,6 +820,13 @@
             <div id="username-suggestions" style="display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.10);max-height:180px;overflow-y:auto;margin-top:2px;"></div>
             <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
+
+          <div class="field">
+            <label>الاسم الكامل <span class="req">*</span></label>
+            <input id="renew-fullname" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[0-9\u0600-\u06FF\u0750-\u077F]/g,'')" onkeydown="return handleFullnameKey(event)" />
+            <div class="err" id="err-renew-fullname">هذا الحقل مطلوب</div>
+          </div>
+
 
           <div class="field" id="renew-duration-field" style="display:none;">
             <label>مدة الاشتراك <span class="req">*</span></label>
@@ -1495,6 +1496,16 @@
     } catch(e) { return null; }
   };
 
+  // جلب كل حسابات الداشبورد (تُستخدم للبحث برقم الهاتف في شاشة الاشتراك الجديد)
+  window.fetchDashboardAccounts = async function() {
+    try {
+      const iptvSnap = await getDocs(collection(db, "iptv"));
+      const accountsDoc = iptvSnap.docs.find(d => d.id === 'accounts');
+      if (!accountsDoc) return [];
+      return JSON.parse(accountsDoc.data().list || "[]");
+    } catch(e) { return []; }
+  };
+
   window.saveRegistration = async function(data) {
     try {
       const username = data.username.trim();
@@ -1623,37 +1634,68 @@
   async function lookupByPhone(val) {
     var phone = val.replace(/\D/g,'');
     if (phone.length < 7) return;
-    var users = await loadGistUsers();
-    var matches = users.filter(function(u){ return u.phone && u.phone.replace(/\D/g,'') === phone; });
-    if (!matches.length) return; // مفيش → يكتب يدوي
+    var accounts = await getDashboardAccounts();
+    // رقم الداشبورد مخزن مع كود الدولة (مثال: +96560002701) بينما حقل الرقم
+    // فيه الجزء المحلي بس (60002701)، فالمقارنة بتبقى بآخر أرقام الرقم مش تطابق تام
+    var matches = accounts.filter(function(a){
+      if (!a.phone) return false;
+      var aDigits = a.phone.replace(/\D/g,'');
+      return aDigits === phone || aDigits.endsWith(phone) || phone.endsWith(aDigits);
+    });
+    if (!matches.length) return; // مفيش تطابق في الداشبورد → يكمل يدوي عادي
+
+    // لو الشخص عنده أكتر من اكونت بنفس الاسم لكن الرقم متسجل في اكونت واحد بس
+    // (فرق بسيط في صيغة الرقم بين الاكونتات)، نضيف الاكونتات التانية بنفس الاسم كمان
+    var seenUsernames = matches.map(function(m){ return m.username; });
+    var matchedNames = matches.map(function(m){ return (m.name || '').trim().toLowerCase(); }).filter(Boolean);
+    if (matchedNames.length) {
+      var sameName = accounts.filter(function(a){
+        var n = (a.name || '').trim().toLowerCase();
+        return n && matchedNames.indexOf(n) !== -1 && seenUsernames.indexOf(a.username) === -1;
+      });
+      matches = matches.concat(sameName);
+    }
+
     if (matches.length === 1) {
-      // اكونت واحد → يملأ أوتوماتيك
-      pickUser(matches[0].username);
-      showToast('✅ تم تحديد اليوزرنيم تلقائياً');
+      // اكونت واحد → اليوزرنيم والاسم الكامل يتملوا أوتوماتيك
+      pickUser(matches[0].username, matches[0].name);
       return;
     }
-    // أكتر من اكونت → popup
+    // أكتر من اكونت → popup لاختيار اليوزرنيم
     var list = document.getElementById('phone-popup-list');
-    list.innerHTML = matches.map(function(u){
-      return '<button onclick="pickUserFromPopup(\'' + u.username + '\')" style="padding:0.7rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#1e293b;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;direction:ltr;text-align:left;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'#f8fafc\'">' + u.username + '</button>';
+    list.innerHTML = matches.map(function(a){
+      var uname = String(a.username || '').replace(/'/g, "\\'");
+      var name  = String(a.name || '').replace(/'/g, "\\'");
+      var display = a.username + (a.name ? ' — ' + a.name : '');
+      return '<button onclick="pickUserFromPopup(\'' + uname + '\',\'' + name + '\')" style="padding:0.7rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#1e293b;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;direction:ltr;text-align:left;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'#f8fafc\'">' + display + '</button>';
     }).join('');
     document.getElementById('phone-popup').style.display = 'flex';
   }
 
-  function pickUserFromPopup(username) {
+  function pickUserFromPopup(username, name) {
     closePhonePopup();
-    pickUser(username);
+    pickUser(username, name);
   }
 
   function closePhonePopup() {
     document.getElementById('phone-popup').style.display = 'none';
   }
 
-  function pickUser(username) {
+  function pickUser(username, name) {
     var input = document.getElementById('renew-username');
-    input.value = username; // الاسم جاي من الـ Gist بالـ casing الصح
+    input.value = username;
     document.getElementById('username-suggestions').style.display = 'none';
+    if (name) document.getElementById('renew-fullname').value = name;
     showRenewDuration();
+  }
+
+  // ===== بحث برقم الهاتف في الداشبورد (تجديد اشتراك) =====
+  var _dashboardAccountsCache = null;
+  async function getDashboardAccounts() {
+    if (_dashboardAccountsCache) return _dashboardAccountsCache;
+    try { _dashboardAccountsCache = await window.fetchDashboardAccounts(); }
+    catch(e) { _dashboardAccountsCache = []; }
+    return _dashboardAccountsCache || [];
   }
 
   // يرجع الاسم الصح من الـ Gist بغض النظر عن الكابيتال
