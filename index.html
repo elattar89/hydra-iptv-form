@@ -406,6 +406,19 @@
 
     .success-card { padding: 2rem 1.2rem; }
   }
+  .suggestion-item {
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #1e293b;
+    direction: ltr;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s;
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover, .suggestion-item.active { background: #f0f9ff; color: #0f3460; font-weight: 600; }
+  .suggestion-item mark { background: none; color: #e53e3e; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -469,13 +482,13 @@
 
           <div class="field">
             <label>اسم المستخدم المراد استخدامه <span class="req">*</span></label>
-            <input id="new-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_.-]/g,'')" />
+            <input id="new-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'')" onkeydown="return handleUsernameKey(event)" />
             <div class="err" id="err-new-username">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
             <label>الاسم الكامل <span class="req">*</span></label>
-            <input id="new-fullname" autocomplete="new-password" type="text" placeholder="" />
+            <input id="new-fullname" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[0-9\u0600-\u06FF\u0750-\u077F]/g,'')" onkeydown="return handleFullnameKey(event)" />
             <div class="err" id="err-new-fullname">هذا الحقل مطلوب</div>
           </div>
 
@@ -702,14 +715,8 @@
 
           <div class="field">
             <label>الاسم الكامل <span class="req">*</span></label>
-            <input id="renew-fullname" autocomplete="new-password" type="text" placeholder="" />
+            <input id="renew-fullname" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[0-9\u0600-\u06FF\u0750-\u077F]/g,'')" onkeydown="return handleFullnameKey(event)" />
             <div class="err" id="err-renew-fullname">هذا الحقل مطلوب</div>
-          </div>
-
-          <div class="field">
-            <label>اسم المستخدم المراد تجديده <span class="req">*</span></label>
-            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:right;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_.-]/g,'');showRenewDuration()" />
-            <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field">
@@ -808,9 +815,16 @@
 <option value="+61">🇦🇺 أستراليا +61</option>
 <option value="+64">🇳🇿 نيوزيلندا +64</option>
               </select>
-              <input id="renew-phone" class="phone-number-input" autocomplete="new-password" type="tel" placeholder="رقم الهاتف" oninput="applyEnglishNums(this)" />
+              <input id="renew-phone" class="phone-number-input" autocomplete="new-password" type="tel" placeholder="رقم الهاتف" oninput="applyEnglishNums(this);lookupByPhone(this.value)" />
             </div>
             <div class="err" id="err-renew-phone">هذا الحقل مطلوب</div>
+          </div>
+
+          <div class="field" style="position:relative;">
+            <label>اسم المستخدم المراد تجديده <span class="req">*</span></label>
+            <input id="renew-username" autocomplete="new-password" type="text" placeholder="" style="direction:ltr;text-align:left;" oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'');showRenewDuration();searchGistUsers(this.value)" onkeydown="return handleUsernameKey(event)" onfocus="searchGistUsers(this.value)" onblur="setTimeout(function(){document.getElementById('username-suggestions').style.display='none'},200)" />
+            <div id="username-suggestions" style="display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.10);max-height:180px;overflow-y:auto;margin-top:2px;"></div>
+            <div class="err" id="err-renew-username">هذا الحقل مطلوب</div>
           </div>
 
           <div class="field" id="renew-duration-field" style="display:none;">
@@ -1092,9 +1106,10 @@
       renewBtn.disabled = true;
       renewBtn.textContent = 'جاري الإرسال...';
       var selectedDurRenew = document.querySelector('input[name="renew-duration"]:checked');
+      resolveUsername(document.getElementById('renew-username').value).then(function(correctUsername) {
       var renewData = {
         kind: 'تجديد اشتراك',
-        username: document.getElementById('renew-username').value,
+        username: correctUsername,
         name: document.getElementById('renew-fullname').value,
         sex: '',
         phone: (document.getElementById('renew-phone-dial').value + document.getElementById('renew-phone').value).trim(),
@@ -1148,6 +1163,7 @@
         renewBtn.textContent = 'إرسال طلب التجديد';
         alert('جاري تحميل النظام، حاول مرة أخرى بعد ثانية.');
       }
+      }); // end resolveUsername
     } else {
       _submittingRenew = false;
       var first = document.querySelector('#screen-renew .invalid, #screen-renew .err.show');
@@ -1159,6 +1175,59 @@
   // أسعار المدد
 
   // تحويل الأرقام العربية/الفارسية للإنجليزية
+  function handleFullnameKey(e) {
+    var ch = e.key;
+    if (ch.length === 1) {
+      // حرف عربي → حوّله لإنجليزي
+      var mapped = AR_TO_EN_KEY[ch];
+      if (mapped) {
+        e.preventDefault();
+        var el = e.target;
+        var s = el.selectionStart, en = el.selectionEnd;
+        el.value = el.value.slice(0, s) + mapped + el.value.slice(en);
+        el.setSelectionRange(s + 1, s + 1);
+        el.dispatchEvent(new Event('input'));
+        return false;
+      }
+      // أرقام ممنوعة
+      if (/^[0-9]$/.test(ch)) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // خريطة الكيبورد العربي → الإنجليزي
+  var AR_TO_EN_KEY = {
+    'ض':'q','ص':'w','ث':'e','ق':'r','ف':'t','غ':'y','ع':'u','ه':'i','خ':'o','ح':'p',
+    'ش':'a','س':'s','ي':'d','ب':'f','ل':'g','ا':'h','ت':'j','ن':'k','م':'l',
+    'ئ':'z','ء':'x','ؤ':'c','ر':'v','لا':'b','ى':'n','ة':'m',
+    'ظ':'Z','ط':'X','ذ':'C','ض':'Q','ص':'W','ث':'E','ق':'R','ف':'T','غ':'Y','ع':'U',
+    '\u0651':'~','\u064e':'A','\u064b':'F','\u064f':'G','\u064c':'H','\u0650':'K','\u064d':'L'
+  };
+  function handleUsernameKey(e) {
+    var ch = e.key;
+    if (ch.length === 1) {
+      var mapped = AR_TO_EN_KEY[ch];
+      if (mapped) {
+        e.preventDefault();
+        var el = e.target;
+        var s = el.selectionStart, en = el.selectionEnd;
+        el.value = el.value.slice(0, s) + mapped + el.value.slice(en);
+        el.setSelectionRange(s + 1, s + 1);
+        el.dispatchEvent(new Event('input'));
+        return false;
+      }
+      // لو مش حرف إنجليزي أو رقم → امنع
+      if (!/^[a-zA-Z0-9]$/.test(ch)) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    return true;
+  }
+
   function toEnglishNums(str) {
     return str.replace(/[٠١٢٣٤٥٦٧٨٩]/g, function(d) {
       return d.charCodeAt(0) - 1632;
@@ -1168,7 +1237,7 @@
   }
   function applyEnglishNums(el) {
     var start = el.selectionStart, end = el.selectionEnd;
-    var converted = toEnglishNums(el.value);
+    var converted = toEnglishNums(el.value).replace(/[^0-9]/g, '');
     if (converted !== el.value) {
       el.value = converted;
       el.setSelectionRange(start, end);
@@ -1522,6 +1591,92 @@
       return { success: false, reason: "error" };
     }
   };
+</script>
+
+<!-- ===== Phone Lookup Popup ===== -->
+<div id="phone-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:18px;padding:1.5rem;width:90%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:0.4rem;text-align:center;">اختر اليوزرنيم</div>
+    <div style="font-size:0.8rem;color:#64748b;text-align:center;margin-bottom:1rem;">الرقم ده مرتبط بأكتر من اكونت</div>
+    <div id="phone-popup-list" style="display:flex;flex-direction:column;gap:0.5rem;max-height:240px;overflow-y:auto;"></div>
+    <button onclick="closePhonePopup()" style="margin-top:1rem;width:100%;padding:0.6rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#64748b;font-family:inherit;font-size:0.85rem;cursor:pointer;">إدخال يدوي</button>
+  </div>
+</div>
+
+<script>
+  var GIST_ID    = '60cb3e2eb70186d8cec046177a628d46';
+  var GIST_TOKEN = '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';
+  var _gistUsers = null;
+
+  async function loadGistUsers() {
+    if (_gistUsers) return _gistUsers;
+    try {
+      var res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+        headers: { 'Authorization': 'token ' + GIST_TOKEN }
+      });
+      var data = await res.json();
+      _gistUsers = JSON.parse(data.files['users.json'].content);
+    } catch(e) { _gistUsers = []; }
+    return _gistUsers;
+  }
+
+  async function lookupByPhone(val) {
+    var phone = val.replace(/\D/g,'');
+    if (phone.length < 7) return;
+    var users = await loadGistUsers();
+    var matches = users.filter(function(u){ return u.phone && u.phone.replace(/\D/g,'') === phone; });
+    if (!matches.length) return; // مفيش → يكتب يدوي
+    if (matches.length === 1) {
+      // اكونت واحد → يملأ أوتوماتيك
+      pickUser(matches[0].username);
+      showToast('✅ تم تحديد اليوزرنيم تلقائياً');
+      return;
+    }
+    // أكتر من اكونت → popup
+    var list = document.getElementById('phone-popup-list');
+    list.innerHTML = matches.map(function(u){
+      return '<button onclick="pickUserFromPopup(\'' + u.username + '\')" style="padding:0.7rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#f8fafc;color:#1e293b;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;direction:ltr;text-align:left;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'#f8fafc\'">' + u.username + '</button>';
+    }).join('');
+    document.getElementById('phone-popup').style.display = 'flex';
+  }
+
+  function pickUserFromPopup(username) {
+    closePhonePopup();
+    pickUser(username);
+  }
+
+  function closePhonePopup() {
+    document.getElementById('phone-popup').style.display = 'none';
+  }
+
+  function pickUser(username) {
+    var input = document.getElementById('renew-username');
+    input.value = username; // الاسم جاي من الـ Gist بالـ casing الصح
+    document.getElementById('username-suggestions').style.display = 'none';
+    showRenewDuration();
+  }
+
+  // يرجع الاسم الصح من الـ Gist بغض النظر عن الكابيتال
+  async function resolveUsername(val) {
+    var users = await loadGistUsers();
+    var match = users.find(function(u){ return u.username.toLowerCase() === val.trim().toLowerCase(); });
+    return match ? match.username : val.trim();
+  }
+
+  async function searchGistUsers(val) {
+    var box = document.getElementById('username-suggestions');
+    if (!val || val.length < 2) { box.style.display = 'none'; return; }
+    var users = await loadGistUsers();
+    var matches = users.filter(function(u){
+      return u.username && u.username.toLowerCase().indexOf(val.toLowerCase()) === 0;
+    });
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = matches.map(function(u){
+      var hi = '<mark>' + u.username.slice(0, val.length) + '</mark>' + u.username.slice(val.length);
+      return '<div class="suggestion-item" onmousedown="pickUser(\'' + u.username + '\')">' + hi + '</div>';
+    }).join('');
+    box.style.display = 'block';
+  }
 </script>
 
 </body>
