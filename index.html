@@ -309,6 +309,37 @@
     margin-top: 2px;
   }
   .duration-option:has(input:checked) .dur-price { color: var(--accent); font-weight: 600; }
+  /* بادج الأكثر طلباً */
+  .duration-option--popular {
+    border-color: #f59e0b;
+    background: rgba(245,158,11,0.06);
+    overflow: hidden;
+  }
+  .duration-option--popular:has(input:checked) {
+    border-color: #f59e0b;
+    background: rgba(245,158,11,0.14);
+  }
+  .popular-badge {
+    display: block;
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    padding: 3px 7px 3px 5px;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    border-radius: 0 11px 0 10px;
+    box-shadow: -2px 2px 6px rgba(245,158,11,0.35);
+    z-index: 2;
+    line-height: 1.4;
+  }
+  .popular-star {
+    display: none;
+  }
+
   .duration-option--disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -317,16 +348,20 @@
   .duration-option--disabled::after {
     content: "غير متاح";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.6);
+    top: -1px;
+    right: -1px;
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
     color: #fff;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 3px 7px 3px 5px;
+    border-radius: 0 11px 0 10px;
     white-space: nowrap;
     pointer-events: none;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    box-shadow: -2px 2px 6px rgba(107,114,128,0.35);
+    z-index: 2;
   }
 
   .price-preview {
@@ -615,8 +650,9 @@
                 <span class="dur-months">12 شهر</span>
                 <span class="dur-price" id="new-dp-12">10 دينار</span>
               </label>
-              <label class="duration-option">
+              <label class="duration-option duration-option--popular">
                 <input type="radio" name="new-duration" value="15" data-price="12" />
+                <span class="popular-badge">الأكثر طلباً</span>
                 <span class="dur-months">15 شهر</span>
                 <span class="dur-price" id="new-dp-15">12 دينار</span>
               </label>
@@ -792,8 +828,9 @@
                 <span class="dur-months">12 شهر</span>
                 <span class="dur-price" id="renew-dp-12">10 دينار</span>
               </label>
-              <label class="duration-option">
+              <label class="duration-option duration-option--popular">
                 <input type="radio" name="renew-duration" value="15" data-price="12" />
+                <span class="popular-badge">الأكثر طلباً</span>
                 <span class="dur-months">15 شهر</span>
                 <span class="dur-price" id="renew-dp-15">12 دينار</span>
               </label>
